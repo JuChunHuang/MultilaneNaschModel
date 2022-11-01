@@ -13,41 +13,41 @@ func PlayNaschModel(initial_road Road, num_gens, time int) []Road {
 }
 
 // calculate the next position of each car
-func CarNextStep(current_road Road) Road{
-	var new_road
+func CarNextStep(current_road Road) Road {
+	var new_road Road
 	var prob_of_decel float64
 
-	for c := range current_road{
+	for c := range current_road {
 		cur := current_road[c]
-		if cur.kind == 1{
+		if cur.kind == 1 {
 			// the car is a NSDV, change the speed of the car
 			pre_car_index := GetPrev(current_road, c)
 			prev := current_road[pre_car_index]
 			delta_d := pre_car_index - c
-			if prev.light == 1 && delta_d > safe_space_min[cur.speed] && delta_d < safe_space_max[cur.speed]{
+			if prev.light == 1 && delta_d > safe_space_min[cur.speed] && delta_d < safe_space_max[cur.speed] {
 				prob_of_decel = p1
-			}else if prev.light == 0 && delta_d > safe_space_min[cur.speed] && delta_d < safe_space_max[cur.speed]{
+			} else if prev.light == 0 && delta_d > safe_space_min[cur.speed] && delta_d < safe_space_max[cur.speed] {
 				prob_of_decel = p2
-			}else if cur.speed == 0{
+			} else if cur.speed == 0 {
 				prob_of_decel = p3
-			}else{
+			} else {
 				prob_of_decel = 0
 			}
 			thres_to_decel := rand.Float64()
 
-			if cur.speed < max_speed && delta_d > safe_space_max[cur.speed]{
+			if cur.speed < max_speed && delta_d > safe_space_max[cur.speed] {
 				// acceleration because no car in front of it
 				cur.speed += 1
 				cur.light = 1
-			}else if prev.light == 1 && delta_d > safe_space_min[cur.speed]{
+			} else if prev.light == 1 && delta_d > safe_space_min[cur.speed] {
 				// acceleration because the front car is accelerated
 				cur.speed += 1
 				cur.light = 1
-			}else if prob_of_decel >= thres_to_decel || delta_d < safe_space_min[cur.speed]{
+			} else if prob_of_decel >= thres_to_decel || delta_d < safe_space_min[cur.speed] {
 				// deceleration
 				cur.speed -= 1
 				cur.light = -1
-			}else if delta_d == safe_space_min[cur.speed]{
+			} else if delta_d == safe_space_min[cur.speed] {
 				// on hold case, speed not changed
 				cur.light = 0
 			}
