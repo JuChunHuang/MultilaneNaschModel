@@ -12,6 +12,54 @@ func PlayNaschModel(initial_road Road, num_gens, time int) []Road {
 	return roads
 }
 
+// UpdateRoad
+
+func UpdateRoad(currentRoad Road, time int) Road{
+	newRoad := CopyRoad(currentRoad)
+
+	for i := range newRoad{
+		newRoad[i].speed = currentRoad.UpdateSpeed(i,time)
+		currentRoad.UpdatePosition(newRoad[i],i,time)
+	}
+}
+
+func CopyRoad(currentRoad *Road) Road{
+	var newRoad Road
+	newRoad = make([]Car,road_length)
+
+	for i := range newRoad{
+		newRoad[i].accel = currentRoad[i].accel
+		newRoad[i].kind = currentRoad[i].kind
+		newRoad[i].light = currentRoad[i].light
+		newRoad[i].speed = currentRoad[i].speed
+	}
+}
+
+// update the speed of cars in each cell over a specified time interval
+func (currentRoad *Road) UpdateSpeed(i, time int){
+	var newSpeed int
+	if currentRoad[i].kind == "SDV"{
+		newSpeed = currentRoad.UpdateSDVSpeed(i)
+	}else if currentRoad[i].kind == "NSDV"{
+		newSpeed = currentRoad.UpdateNSDVSpeed(i)
+	}else{
+		newSpeed = 0
+	}
+	return newSpeed
+}
+
+func (currentRoad *Road) UpdatePosition(cari Car, i, time int){
+	if cari.kind == "SDV"|| cari.kind == "NSDV"{
+		newPosition := i + cari.speed * time
+	}
+	if newPosition > road_length{
+		// car disappear?
+	}
+}
+	
+
+
+
 // calculate the next position of each car
 func CarNextStep(current_road Road) Road{
 	var new_road
