@@ -18,5 +18,5 @@ type Car struct {
 
 type Road [roadLength]Car
 
-var safeSpaceMin = [maxSpeed]int{1, 5, 10, 15, 20, 25, 30, 35, 40, 45}
-var safeSpaceMax = [maxSpeed]int{10, 15, 20, 25, 30, 35, 40, 45, 50, 55}
+var safeSpaceMin = [maxSpeed + 1]int{1, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50}
+var safeSpaceMax = [maxSpeed + 1]int{10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60}

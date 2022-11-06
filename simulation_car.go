@@ -4,7 +4,17 @@ import (
 	"math/rand"
 )
 
-func SDVNNextStep(currentRoad Road) Road {
+func PlayNaschModel(initialRoad Road, numGens int) []Road {
+	roads := make([]Road, numGens+1)
+	roads[0] = initialRoad
+	for i := 1; i <= numGens; i++ {
+		roads[i] = UpdateRoad(roads[i-1])
+	}
+
+	return roads
+}
+
+func UpdateRoad(currentRoad Road) Road {
 	var newRoad Road
 	var prevCar Car
 	var prevCarIndex int
@@ -86,7 +96,7 @@ func SDVNNextStep(currentRoad Road) Road {
 				newLight = 1
 				newAccel = 1
 
-			} else if Checktrain(i) == true && delta_d == GetSDVmindis(i, prevCarIndex, currentRoad) && currentRoad[GetPrex(currentRoad, prevCarIndex)].accel == 1 {
+			} else if Checktrain(i) == true && delta_d == GetSDVmindis(i, prevCarIndex, currentRoad) && currentRoad[GetPrev(currentRoad, prevCarIndex)].accel == 1 {
 				newSpeed = currentRoad[i].speed + 1
 				newLight = 1
 				newAccel = 1
@@ -125,6 +135,78 @@ func SDVNNextStep(currentRoad Road) Road {
 	}
 
 	return newRoad
+}
+
+func GetPrev(currentRoad Road, index int) int {
+	for c := index + 1; c < roadLength; c++ {
+		if currentRoad[c].kind != 0 {
+			return c
+		}
+	}
+
+	return 2 * roadLength
+}
+
+func GetNext(currentRoad Road, index int) int {
+	for c := index - 1; c <= 0; c-- {
+		if currentRoad[c].kind != 0 {
+			return c
+		}
+	}
+
+	return 0
+}
+
+func Produce(currentRoad Road, kindPossiblity float64) bool {
+
+	// Determine the kind of next car based on kind possibility
+	p := rand.Float64()
+	var kind int
+	var initSpeedBound int
+	if p < kindPossiblity {
+		kind = 1
+	} else {
+		kind = 2
+	}
+
+	// determin the speed range that the car can obtain
+	if currentRoad[0].kind == 0 {
+		initSpeedBound = 0
+		prevCar := GetPrev(currentRoad, 0)
+
+		// if no car before
+		if prevCar > roadLength {
+			initSpeedBound = maxSpeed
+		} else if (kind == 1) || (kind == 2 && currentRoad[prevCar].kind == 1) {
+			// if the new car is a NSDV or the new car is SDV and prevCar is NSDV
+			for i := 0; i < maxSpeed; i++ {
+				if prevCar < safeSpaceMin[i] {
+					break
+				}
+				initSpeedBound = i - 1
+			}
+		} else if kind == 2 && currentRoad[prevCar].kind == 2 {
+			// if the new car is a SDV and prevCar is a SDV
+			for i := 0; i < maxSpeed; i++ {
+				minSpace := safeSpaceMin[i] - safeSpaceMin[currentRoad[prevCar].speed] + 2*currentRoad[prevCar].speed + 1
+				if prevCar < minSpace {
+					break
+				}
+				initSpeedBound = i - 1
+			}
+		}
+	}
+
+	if initSpeedBound <= 0 {
+		// no car produced
+		return false
+	} else {
+		currentRoad[0].speed = 1 + rand.Intn(initSpeedBound)
+		currentRoad[0].kind = kind
+		currentRoad[0].light = 0
+		currentRoad[0].accel = 0
+	}
+	return true
 }
 
 func GetSDVmindis(k, m int, currentroad Road) int {
