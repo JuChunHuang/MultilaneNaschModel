@@ -76,9 +76,15 @@ func GetNext(current_road Road, index_of_car int) int {
 	return 0
 }
 
-func Produce(current_road Road) bool {
+func Produce(current_road Road, kindpossibility, flfloat64) bool {
+	p := rand.Float64()
 	var kind int
-	kind = 1
+	if p < kindpossibility{
+		kind = 1
+	}else{
+		kind = 2
+	}
+
 	if current_road[0].kind == 0 {
 		init_speed_bound := 0
 		prev_car := GetPrev(current_road, 0)
@@ -87,30 +93,23 @@ func Produce(current_road Road) bool {
 		if prev_car > road_length {
 			// if no car before
 			init_speed_bound = max_speed
-		} else if kind == 1 {
-			// if the new car is a NSDV
+		} else if (kind == 1) || (kind == 2 && current_road[prev_car].kind == 1) {
+			// if the new car is a NSDV or the new car is SDV and prev_car is NSDV
 			for i := 0; i < max_speed; i++ {
 				if prev_car < safe_space_min[i] {
 					break
 				}
-				init_speed_bound = i
+				init_speed_bound = i - 1
 			}
-		} else if current_road[prev_car].kind == 1 {
-			// if the new car is a SDV and prev_car is a NSDV
-			for i := 0; i < max_speed; i++ {
-				if prev_car < safe_space_min[i] {
-					break
-				}
-				init_speed_bound = i
-			}
-		} else if current_road[prev_car].kind == 2 {
+		} 
+		} else if kind == 2 && current_road[prev_car].kind == 2 {
 			// if the new car is a SDV and prev_car is a SDV
 			for i := 0; i < max_speed; i++ {
 				min_space := safe_space_min[i] - safe_space_min[current_road[prev_car].speed] + 2*current_road[prev_car].speed + 1
 				if prev_car < min_space {
 					break
 				}
-				init_speed_bound = i
+				init_speed_bound = i - 1
 			}
 		}
 
