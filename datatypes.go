@@ -1,8 +1,8 @@
 package main
 
-const road_length = 1000
-const lane_num = 1
-const max_speed = 10
+const roadLength = 1000
+const laneNum = 1
+const maxSpeed = 10
 
 // const car_num = 10
 const p1 = 0.94
@@ -13,10 +13,10 @@ type Car struct {
 	speed int
 	kind  int
 	light int
-	accel bool
+	accel int
 }
 
-type Road [road_length]Car
+type Road [roadLength]Car
 
-var safe_space_min = [max_speed]int{1, 5, 10, 15, 20, 25, 30, 35, 40, 45}
-var safe_space_max = [max_speed]int{10, 15, 20, 25, 30, 35, 40, 45, 50, 55}
+var safeSpaceMin = [maxSpeed]int{1, 5, 10, 15, 20, 25, 30, 35, 40, 45}
+var safeSpaceMax = [maxSpeed]int{10, 15, 20, 25, 30, 35, 40, 45, 50, 55}
