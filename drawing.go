@@ -19,7 +19,7 @@ func (r Road) BoardToImage(cellWidth int) image.Image {
 	rows := len(r)
 	cols := 1
 
-	c := canvas.CreateNewCanvas(cellWidth*rows, cellWidth*cols)
+	c := canvas.CreateNewCanvas(cellWidth*rows, cellWidth*5)
 
 	for i := 0; i < rows; i++ {
 		if r[i].kind == 0 {
@@ -30,8 +30,8 @@ func (r Road) BoardToImage(cellWidth int) image.Image {
 			c.SetFillColor(canvas.MakeColor(0, 255, 0))
 		}
 
-		x1, y1 := cellWidth*cols, cellWidth*i
-		x2, y2 := cellWidth*(cols+1), cellWidth*(i+1)
+		x1, y1 := cellWidth*i, cellWidth*cols
+		x2, y2 := cellWidth*(i+1), cellWidth*(cols+1)
 
 		c.ClearRect(x1, y1, x2, y2)
 

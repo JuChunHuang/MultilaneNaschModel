@@ -18,5 +18,7 @@ type Car struct {
 
 type Road []Car
 
-var safeSpaceMin = [maxSpeed + 1]int{1, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50}
-var safeSpaceMax = [maxSpeed + 1]int{10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60}
+const k = 10
+
+var safeSpaceMin = [maxSpeed + 1]int{1 * k, 5 * k, 10 * k, 15 * k, 20 * k, 25 * k, 30 * k, 35 * k, 40 * k, 45 * k, 50 * k}
+var safeSpaceMax = [maxSpeed + 1]int{10 * k, 15 * k, 20 * k, 25 * k, 30 * k, 35 * k, 40 * k, 45 * k, 50 * k, 55 * k, 60 * k}
