@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"math/rand"
 	"time"
 )
@@ -79,7 +78,7 @@ func UpdateRoad(currentRoad Road) Road {
 			if newIndex >= roadLength {
 				carCnt++
 			} else if newIndex < roadLength && newRoad[newIndex].kind != 0 {
-				// panic("NSDV crashes something.")
+				panic("NSDV crashes something.")
 			} else {
 				if newSpeed < 0 {
 					newSpeed = 0
@@ -124,7 +123,7 @@ func UpdateRoad(currentRoad Road) Road {
 			if newIndex >= roadLength {
 				carCnt++
 			} else if newIndex < roadLength && newRoad[newIndex].kind != 0 {
-				//panic("SDV crashes something.")
+				panic("SDV crashes something.")
 			} else {
 				if newSpeed < 0 {
 					newSpeed = 0
@@ -174,7 +173,6 @@ func Produce(currentRoad *Road, kindPossiblity float64) bool {
 	} else {
 		kind = 2
 	}
-	//fmt.Println(kind)
 
 	// determin the speed range that the car can obtain
 	if (*currentRoad)[0].kind == 0 {
@@ -204,13 +202,11 @@ func Produce(currentRoad *Road, kindPossiblity float64) bool {
 		}
 	}
 
-	fmt.Println("INISPEED", initSpeedBound)
 	if initSpeedBound <= 0 {
 		// no car produced
 		return false
 	} else {
 		(*currentRoad)[0].speed = 1 + rand.Intn(initSpeedBound)
-		fmt.Println(kind)
 		(*currentRoad)[0].kind = kind
 		(*currentRoad)[0].light = 0
 		(*currentRoad)[0].accel = 0

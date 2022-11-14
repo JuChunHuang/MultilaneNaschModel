@@ -20,6 +20,9 @@ func (r Road) BoardToImage(cellWidth int) image.Image {
 	cols := 1
 
 	c := canvas.CreateNewCanvas(cellWidth*rows, cellWidth*5)
+	c.SetFillColor(canvas.MakeColor(255, 255, 255))
+	c.ClearRect(0, 0, cellWidth*rows, cellWidth*5)
+	c.Fill()
 
 	for i := 0; i < rows; i++ {
 		if r[i].kind == 0 {

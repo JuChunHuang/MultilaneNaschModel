@@ -15,7 +15,7 @@ func main() {
 	}
 
 	numGens := 100
-	cellWidth := 50
+	cellWidth := 200
 	timePoints := PlayNaschModel(initialRoad, numGens)
 	fmt.Println("finish")
 	imageList := BoardsToImages(timePoints, cellWidth)
