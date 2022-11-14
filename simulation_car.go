@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"math/rand"
 	"time"
 )
@@ -27,8 +28,8 @@ func UpdateRoad(currentRoad Road) Road {
 	newRoad := make(Road, roadLength)
 	carCnt := 0
 
+	Produce(&currentRoad, 0.5)
 	for i := range currentRoad {
-
 		prevCarIndex = GetPrev(currentRoad, i)
 		if prevCarIndex >= roadLength {
 			prevCar.light = -3
@@ -162,10 +163,10 @@ func GetNext(currentRoad Road, index int) int {
 	return 0
 }
 
-func Produce(currentRoad Road, kindPossiblity float64) bool {
-
+func Produce(currentRoad *Road, kindPossiblity float64) bool {
 	// Determine the kind of next car based on kind possibility
-	p := rand.Float64()
+	r := rand.New(rand.NewSource(time.Now().UnixNano()))
+	p := r.Float64()
 	var kind int
 	var initSpeedBound int
 	if p < kindPossiblity {
@@ -173,43 +174,46 @@ func Produce(currentRoad Road, kindPossiblity float64) bool {
 	} else {
 		kind = 2
 	}
+	//fmt.Println(kind)
 
 	// determin the speed range that the car can obtain
-	if currentRoad[0].kind == 0 {
+	if (*currentRoad)[0].kind == 0 {
 		initSpeedBound = 0
-		prevCar := GetPrev(currentRoad, 0)
+		prevCar := GetPrev((*currentRoad), 0)
 
 		// if no car before
 		if prevCar > roadLength {
 			initSpeedBound = maxSpeed
-		} else if (kind == 1) || (kind == 2 && currentRoad[prevCar].kind == 1) {
+		} else if (kind == 1) || (kind == 2 && (*currentRoad)[prevCar].kind == 1) {
 			// if the new car is a NSDV or the new car is SDV and prevCar is NSDV
 			for i := 0; i < maxSpeed; i++ {
 				if prevCar < safeSpaceMin[i] {
+					initSpeedBound = i - 1
 					break
 				}
-				initSpeedBound = i - 1
 			}
-		} else if kind == 2 && currentRoad[prevCar].kind == 2 {
+		} else if kind == 2 && (*currentRoad)[prevCar].kind == 2 {
 			// if the new car is a SDV and prevCar is a SDV
 			for i := 0; i < maxSpeed; i++ {
-				minSpace := safeSpaceMin[i] - safeSpaceMin[currentRoad[prevCar].speed] + 2*currentRoad[prevCar].speed + 1
+				minSpace := safeSpaceMin[i] - safeSpaceMin[(*currentRoad)[prevCar].speed] + 2*(*currentRoad)[prevCar].speed + 1
 				if prevCar < minSpace {
+					initSpeedBound = i - 1
 					break
 				}
-				initSpeedBound = i - 1
 			}
 		}
 	}
 
+	fmt.Println("INISPEED", initSpeedBound)
 	if initSpeedBound <= 0 {
 		// no car produced
 		return false
 	} else {
-		currentRoad[0].speed = 1 + rand.Intn(initSpeedBound)
-		currentRoad[0].kind = kind
-		currentRoad[0].light = 0
-		currentRoad[0].accel = 0
+		(*currentRoad)[0].speed = 1 + rand.Intn(initSpeedBound)
+		fmt.Println(kind)
+		(*currentRoad)[0].kind = kind
+		(*currentRoad)[0].light = 0
+		(*currentRoad)[0].accel = 0
 	}
 	return true
 }
