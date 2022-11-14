@@ -15,13 +15,13 @@ func BoardsToImages(roads []Road, cellWidth int) []image.Image {
 
 //BoardToImage converts a GameBoard to an image, in which
 //each cell has a cell width given by a parameter
-func (r Road) BoardToImage(cellWidth int) image.Image {
+func (r Road) BoardToImage(scalingFactor int) image.Image {
 	rows := len(r)
 	cols := 1
 
-	c := canvas.CreateNewCanvas(cellWidth*rows, cellWidth*5)
+	c := canvas.CreateNewCanvas(rows, scalingFactor*5)
 	c.SetFillColor(canvas.MakeColor(255, 255, 255))
-	c.ClearRect(0, 0, cellWidth*rows, cellWidth*5)
+	c.ClearRect(0, 0, rows, scalingFactor*5)
 	c.Fill()
 
 	for i := 0; i < rows; i++ {
@@ -33,8 +33,8 @@ func (r Road) BoardToImage(cellWidth int) image.Image {
 			c.SetFillColor(canvas.MakeColor(0, 255, 0))
 		}
 
-		x1, y1 := cellWidth*i, cellWidth*cols
-		x2, y2 := cellWidth*(i+1), cellWidth*(cols+1)
+		x1, y1 := i, scalingFactor*cols
+		x2, y2 := i+1, scalingFactor*(cols+1)
 
 		c.ClearRect(x1, y1, x2, y2)
 
