@@ -2,6 +2,7 @@ package main
 
 import (
 	"math/rand"
+	"time"
 )
 
 func PlayNaschModel(initialRoad Road, numGens int) []Road {
@@ -9,13 +10,13 @@ func PlayNaschModel(initialRoad Road, numGens int) []Road {
 	roads[0] = initialRoad
 	for i := 1; i <= numGens; i++ {
 		roads[i] = UpdateRoad(roads[i-1])
+		//fmt.Println(roads[i])
 	}
 
 	return roads
 }
 
 func UpdateRoad(currentRoad Road) Road {
-	var newRoad Road
 	var prevCar Car
 	var prevCarIndex int
 	var newSpeed int
@@ -23,12 +24,18 @@ func UpdateRoad(currentRoad Road) Road {
 	var newAccel int
 	var probOfDecel float64
 
+	newRoad := make(Road, roadLength)
 	carCnt := 0
 
 	for i := range currentRoad {
 
 		prevCarIndex = GetPrev(currentRoad, i)
-		prevCar = currentRoad[prevCarIndex]
+		if prevCarIndex >= roadLength {
+			prevCar.light = -3
+		} else {
+			prevCar = currentRoad[prevCarIndex]
+		}
+
 		delta_d := prevCarIndex - i
 
 		if currentRoad[i].kind == 1 {
@@ -68,11 +75,16 @@ func UpdateRoad(currentRoad Road) Road {
 			}
 
 			newIndex := i + newSpeed
-			if newIndex < roadLength && newRoad[newIndex].kind != 0 {
-				panic("NSDV crashes something.")
-			} else if newIndex >= roadLength {
+			if newIndex >= roadLength {
 				carCnt++
+			} else if newIndex < roadLength && newRoad[newIndex].kind != 0 {
+				// panic("NSDV crashes something.")
 			} else {
+				if newSpeed < 0 {
+					newSpeed = 0
+				} else if newSpeed > 10 {
+					newSpeed = 10
+				}
 				newRoad[newIndex].speed = newSpeed
 				newRoad[newIndex].kind = currentRoad[i].kind
 				newRoad[newIndex].light = newLight
@@ -80,6 +92,7 @@ func UpdateRoad(currentRoad Road) Road {
 		}
 
 		if currentRoad[i].kind == 2 {
+
 			if delta_d >= safeSpaceMax[currentRoad[i].speed] {
 				newSpeed = currentRoad[i].speed + 1
 				newLight = 1
@@ -96,35 +109,27 @@ func UpdateRoad(currentRoad Road) Road {
 				newLight = 1
 				newAccel = 1
 
-			} else if Checktrain(i) == true && delta_d == GetSDVmindis(i, prevCarIndex, currentRoad) && currentRoad[GetPrev(currentRoad, prevCarIndex)].accel == 1 {
-				newSpeed = currentRoad[i].speed + 1
-				newLight = 1
-				newAccel = 1
-
-			} else if prevCar.kind == 1 && delta_d <= safeSpaceMin[currentRoad[i].speed] {
+			} else if prevCar.kind == 2 && delta_d <= GetSDVmindis(i, prevCarIndex, currentRoad) {
 				newSpeed = currentRoad[i].speed - 1
 				newLight = -1
 				newAccel = 0
 
-			} else if prevCar.kind == 2 && Checktrain(i) == false && delta_d <= GetSDVmindis(i, prevCarIndex, currentRoad) {
-				newSpeed = currentRoad[i].speed - 1
-				newLight = -1
-				newAccel = 0
-			} else if Checktrain(i) == true && currentRoad[GetPrev(currentRoad, prevCarIndex)].light == -1 {
-				newSpeed = currentRoad[i].speed - 1
-				newLight = -1
-				newAccel = 0
 			} else {
 				newLight = 0
 				newAccel = 0
 			}
 
 			newIndex := i + newSpeed
-			if newIndex < roadLength && newRoad[newIndex].kind != 0 {
-				panic("SDV crashes something.")
-			} else if newIndex >= roadLength {
+			if newIndex >= roadLength {
 				carCnt++
+			} else if newIndex < roadLength && newRoad[newIndex].kind != 0 {
+				//panic("SDV crashes something.")
 			} else {
+				if newSpeed < 0 {
+					newSpeed = 0
+				} else if newSpeed > 10 {
+					newSpeed = 10
+				}
 				newRoad[newIndex].speed = newSpeed
 				newRoad[newIndex].light = newLight
 				newRoad[newIndex].accel = newAccel
@@ -227,4 +232,10 @@ func max(k, m int) int {
 	} else {
 		return m
 	}
+}
+
+func GenRandom(n int) int {
+	r := rand.New(rand.NewSource(time.Now().UnixNano()))
+	rn := r.Intn(n)
+	return rn
 }
