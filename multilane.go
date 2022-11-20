@@ -101,30 +101,46 @@ func ChangeSpeed(currentRoad MultiRoad) (MultiRoad, int) {
 					newRoad[curLane][newIndex].backlight = newLight
 				}
 			} else if kind == 2 {
-				if delta_d >= safeSpaceMax[speed] {
-					newSpeed = speed + 1
-					newLight = 1
-					newAccel = 1
+				if CheckTrain(currentRoad[curLane], j) == true {
+					trainHead := GetTrainHead(currentRoad[curLane], j)
 
-				} else if prevCar.kind == 1 && prevCar.backlight != -1 && delta_d >= safeSpaceMin[speed] {
-					newSpeed = speed + 1
-					newLight = 1
-					newAccel = 1
-
-				} else if prevCar.kind == 2 && delta_d > GetSDVmindis(j, prevCarIndex, currentRoad[curLane]) {
-
-					newSpeed = speed + 1
-					newLight = 1
-					newAccel = 1
-
-				} else if prevCar.kind == 2 && delta_d <= GetSDVmindis(j, prevCarIndex, currentRoad[curLane]) {
-					newSpeed = speed - 1
-					newLight = -1
-					newAccel = 0
-
+					if delta_d == GetSDVmindis(j, prevCarIndex, currentRoad[curLane]) &&
+						currentRoad[curLane][trainHead].accel == 1 {
+						newSpeed = speed + 1
+						newLight = 1
+						newAccel = 1
+					} else if delta_d == GetSDVmindis(j, prevCarIndex, currentRoad[curLane]) &&
+						currentRoad[curLane][trainHead].backlight == -1 {
+						newSpeed = speed - 1
+						newLight = -1
+						newAccel = 0
+					}
 				} else {
-					newLight = 0
-					newAccel = 0
+					if delta_d >= safeSpaceMax[speed] {
+						newSpeed = speed + 1
+						newLight = 1
+						newAccel = 1
+
+					} else if prevCar.kind == 1 && prevCar.backlight != -1 && delta_d >= safeSpaceMin[speed] {
+						newSpeed = speed + 1
+						newLight = 1
+						newAccel = 1
+
+					} else if prevCar.kind == 2 && delta_d > GetSDVmindis(j, prevCarIndex, currentRoad[curLane]) {
+
+						newSpeed = speed + 1
+						newLight = 1
+						newAccel = 1
+
+					} else if prevCar.kind == 2 && delta_d <= GetSDVmindis(j, prevCarIndex, currentRoad[curLane]) {
+						newSpeed = speed - 1
+						newLight = -1
+						newAccel = 0
+
+					} else {
+						newLight = 0
+						newAccel = 0
+					}
 				}
 
 				newIndex := j + newSpeed
