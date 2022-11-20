@@ -363,7 +363,7 @@ func LCMforSDVLeft(road []Road, currentRoadIndex int, currentcarIndex int) bool 
 	currentCar := road[currentRoadIndex][currentcarIndex]
 	Dmax_vA := safeSpaceMax[currentCar.speed]
 
-	if delta_dAB < Dmax_vA && currentCar.speed > prevCar.speed && (delta_dAE > Dmax_vA || prevNeighborCar.speed > currentCar.speed) || prevCar.turninglight == -1 && prevCar.kind == 2 || (Checktrain(currentcarIndex) == true && prevCar.turninglight == -1) {
+	if delta_dAB < Dmax_vA && currentCar.speed > prevCar.speed && (delta_dAE > Dmax_vA || prevNeighborCar.speed > currentCar.speed) || prevCar.turninglight == -1 && prevCar.kind == 2 {
 		return true
 	}
 
@@ -394,7 +394,7 @@ func LCMforSDVRight(road []Road, currentRoadIndex int, currentcarIndex int) bool
 	currentCar := road[currentRoadIndex][currentcarIndex]
 	Dmax_vA := safeSpaceMax[currentCar.speed]
 
-	if delta_dAB < Dmax_vA && currentCar.speed > prevCar.speed && (delta_dAE > Dmax_vA || prevNeighborCar.speed > currentCar.speed) || prevCar.turninglight == 1 && prevCar.kind == 2 || (Checktrain(currentcarIndex) == true && prevCar.turninglight == 1) {
+	if delta_dAB < Dmax_vA && currentCar.speed > prevCar.speed && (delta_dAE > Dmax_vA || prevNeighborCar.speed > currentCar.speed) || prevCar.turninglight == 1 && prevCar.kind == 2 {
 		return true
 	}
 
@@ -415,14 +415,18 @@ func ChangeLaneSDVCondition(road MultiRoad, currentlane, num int) int {
 }
 
 func LCSforSDVLeft(roads MultiRoad, currentRoadIndex int, currentcarIndex int) bool {
+
 	leftroadIndex := currentRoadIndex - 1
 	leftprevIndex := GetPrev(roads[currentRoadIndex], currentcarIndex)
+
 	delta_dsamel := leftprevIndex - currentcarIndex
 	delta_differlprev := GetPrev(roads[leftroadIndex], currentcarIndex) - currentcarIndex
 	leftnextcarIndex := GetNext(roads[leftroadIndex], currentcarIndex)
 	delta_differlnext := currentcarIndex - leftnextcarIndex
+
 	safeDisPrev := safeSpaceMin[roads[currentRoadIndex][currentcarIndex].speed]
 	safeDisNext := safeSpaceMin[roads[leftroadIndex][leftnextcarIndex].speed]
+
 	currentcar := roads[currentRoadIndex][currentcarIndex]
 
 	if delta_dsamel > safeDisPrev && delta_differlprev > safeDisPrev && delta_differlnext > safeDisNext && (currentcar.turninglight != -1 || currentcar.kind == 2) {
@@ -433,14 +437,18 @@ func LCSforSDVLeft(roads MultiRoad, currentRoadIndex int, currentcarIndex int) b
 }
 
 func LCSforSDVRight(roads MultiRoad, currentRoadIndex int, currentcarIndex int) bool {
+
 	rightroadIndex := currentRoadIndex + 1
 	rightprevIndex := GetPrev(roads[currentRoadIndex], currentcarIndex)
+
 	delta_dsamel := rightprevIndex - currentcarIndex
 	delta_differlprev := GetPrev(roads[rightroadIndex], currentcarIndex) - currentcarIndex
 	rightnextcarIndex := GetNext(roads[rightroadIndex], currentcarIndex)
 	delta_differlnext := currentcarIndex - rightnextcarIndex
+
 	safeDisPrev := safeSpaceMin[roads[currentRoadIndex][currentcarIndex].speed]
 	safeDisNext := safeSpaceMin[roads[rightroadIndex][rightnextcarIndex].speed]
+
 	currentcar := roads[currentRoadIndex][currentcarIndex]
 
 	if delta_dsamel > safeDisPrev && delta_differlprev > safeDisPrev && delta_differlnext > safeDisNext && (currentcar.turninglight != 1 || currentcar.kind == 2) {
@@ -455,6 +463,7 @@ func CarTurnLeft(roads []Road, currentRoadIndex int, currentcarIndex int) {
 	leftroadIndex := currentRoadIndex - 1
 	if LCMforSDVLeft(roads, currentRoadIndex, currentcarIndex) == true && LCSforSDVLeft(roads, currentRoadIndex, currentcarIndex) == true {
 		currentcar.turninglight = -1
+
 		roads[leftroadIndex][currentcarIndex].speed = currentcar.speed
 		roads[leftroadIndex][currentcarIndex].kind = currentcar.kind
 		roads[leftroadIndex][currentcarIndex].backlight = currentcar.backlight
@@ -473,6 +482,7 @@ func CarTurnRight(roads []Road, currentRoadIndex int, currentcarIndex int) {
 	RightroadIndex := currentRoadIndex + 1
 	if LCMforSDVRight(roads, currentRoadIndex, currentcarIndex) == true && LCSforSDVRight(roads, currentRoadIndex, currentcarIndex) == true {
 		currentcar.turninglight = -1
+
 		roads[RightroadIndex][currentcarIndex].speed = currentcar.speed
 		roads[RightroadIndex][currentcarIndex].kind = currentcar.kind
 		roads[RightroadIndex][currentcarIndex].turninglight = currentcar.turninglight
