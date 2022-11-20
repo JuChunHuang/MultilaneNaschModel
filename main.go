@@ -10,7 +10,7 @@ func main() {
 	for i := range initialRoad {
 		initialRoad[i].accel = 0
 		initialRoad[i].kind = 0
-		initialRoad[i].light = 0
+		initialRoad[i].backlight = 0
 		initialRoad[i].speed = 0
 	}
 
@@ -19,5 +19,5 @@ func main() {
 	timePoints := PlayNaschModel(initialRoad, numGens)
 	fmt.Println("finish")
 	imageList := BoardsToImages(timePoints, cellWidth)
-	gifhelper.ImagesToGIF(imageList, "prisoners")
+	gifhelper.ImagesToGIF(imageList, "cars")
 }

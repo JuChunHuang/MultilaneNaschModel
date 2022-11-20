@@ -9,14 +9,14 @@ func PlayNaschModel(initialRoad Road, numGens int) []Road {
 	roads := make([]Road, numGens+1)
 	roads[0] = initialRoad
 	for i := 1; i <= numGens; i++ {
-		roads[i] = UpdateRoad(roads[i-1])
+		roads[i] = SingleLaneSimulation(roads[i-1])
 		//fmt.Println(roads[i])
 	}
 
 	return roads
 }
 
-func UpdateRoad(currentRoad Road) Road {
+func SingleLaneSimulation(currentRoad Road) Road {
 	var prevCar Car
 	var prevCarIndex int
 	var newSpeed int
@@ -31,7 +31,7 @@ func UpdateRoad(currentRoad Road) Road {
 	for i := range currentRoad {
 		prevCarIndex = GetPrev(currentRoad, i)
 		if prevCarIndex >= roadLength {
-			prevCar.light = -3
+			prevCar.backlight = -3
 		} else {
 			prevCar = currentRoad[prevCarIndex]
 		}
@@ -40,9 +40,9 @@ func UpdateRoad(currentRoad Road) Road {
 
 		if currentRoad[i].kind == 1 {
 			// the car is a NSDV, change the speed of the car
-			if prevCar.light == 1 && delta_d > safeSpaceMin[currentRoad[i].speed] && delta_d < safeSpaceMax[currentRoad[i].speed] {
+			if prevCar.backlight == -1 && delta_d > safeSpaceMin[currentRoad[i].speed] && delta_d < safeSpaceMax[currentRoad[i].speed] {
 				probOfDecel = p1
-			} else if prevCar.light == 0 && delta_d > safeSpaceMin[currentRoad[i].speed] && delta_d < safeSpaceMax[currentRoad[i].speed] {
+			} else if prevCar.backlight >= 0 && delta_d > safeSpaceMin[currentRoad[i].speed] && delta_d < safeSpaceMax[currentRoad[i].speed] {
 				probOfDecel = p2
 			} else if currentRoad[i].speed == 0 {
 				probOfDecel = p3
@@ -57,7 +57,7 @@ func UpdateRoad(currentRoad Road) Road {
 					// acceleration because no car in front of it
 					newSpeed = currentRoad[i].speed + 1
 					newLight = 1
-				} else if prevCar.light == 1 && delta_d > safeSpaceMin[currentRoad[i].speed] {
+				} else if prevCar.backlight == 1 && delta_d > safeSpaceMin[currentRoad[i].speed] {
 					// acceleration because the front car is accelerated
 					newSpeed = currentRoad[i].speed + 1
 					newLight = 1
@@ -87,7 +87,7 @@ func UpdateRoad(currentRoad Road) Road {
 				}
 				newRoad[newIndex].speed = newSpeed
 				newRoad[newIndex].kind = currentRoad[i].kind
-				newRoad[newIndex].light = newLight
+				newRoad[newIndex].backlight = newLight
 			}
 		}
 
@@ -98,7 +98,7 @@ func UpdateRoad(currentRoad Road) Road {
 				newLight = 1
 				newAccel = 1
 
-			} else if prevCar.kind == 1 && prevCar.light != -1 && delta_d >= safeSpaceMin[currentRoad[i].speed] {
+			} else if prevCar.kind == 1 && prevCar.backlight != -1 && delta_d >= safeSpaceMin[currentRoad[i].speed] {
 				newSpeed = currentRoad[i].speed + 1
 				newLight = 1
 				newAccel = 1
@@ -131,7 +131,7 @@ func UpdateRoad(currentRoad Road) Road {
 					newSpeed = 10
 				}
 				newRoad[newIndex].speed = newSpeed
-				newRoad[newIndex].light = newLight
+				newRoad[newIndex].backlight = newLight
 				newRoad[newIndex].accel = newAccel
 				newRoad[newIndex].kind = currentRoad[i].kind
 			}
@@ -208,7 +208,7 @@ func Produce(currentRoad *Road, kindPossiblity float64) bool {
 	} else {
 		(*currentRoad)[0].speed = 1 + rand.Intn(initSpeedBound)
 		(*currentRoad)[0].kind = kind
-		(*currentRoad)[0].light = 0
+		(*currentRoad)[0].backlight = 0
 		(*currentRoad)[0].accel = 0
 	}
 	return true
