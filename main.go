@@ -21,3 +21,14 @@ func main() {
 	imageList := BoardsToImages(timePoints, cellWidth)
 	gifhelper.ImagesToGIF(imageList, "cars")
 }
+
+func PlayNaschModel(initialRoad Road, numGens int) []Road {
+	roads := make([]Road, numGens+1)
+	roads[0] = initialRoad
+	for i := 1; i <= numGens; i++ {
+		roads[i] = SingleLaneSimulation(roads[i-1])
+		//fmt.Println(roads[i])
+	}
+
+	return roads
+}
