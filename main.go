@@ -19,5 +19,5 @@ func main() {
 	timePoints := PlayNaschModel(initialRoad, numGens)
 	fmt.Println("finish")
 	imageList := BoardsToImages(timePoints, cellWidth)
-	gifhelper.ImagesToGIF(imageList, "prisoners")
+	gifhelper.ImagesToGIF(imageList, "cars")
 }
