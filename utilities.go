@@ -119,6 +119,71 @@ func ProduceMulti(currentRoads *MultiRoad, kindPossiblity float64) bool {
 	return true
 }
 
-func Checktrain(num int) bool {
-	return false
+func GetTrainHead(road Road, carIndex int) int {
+	trainHeadIndex := carIndex
+	index := CheckPreviousTrain(road, carIndex)
+
+	if index == 0 {
+		return trainHeadIndex
+	} else {
+		for i := carIndex + 1; i < roadLength-1; i++ {
+			if road[i].kind == 0 {
+				trainHeadIndex++
+
+			} else if road[i].kind == 2 {
+				index -= 1
+				if index == 0 {
+					return trainHeadIndex
+				}
+			}
+		}
+		return trainHeadIndex
+	}
+
+}
+
+// Only checktrain if the car is an SDV.
+func CheckTrain(road Road, carIndex int) bool {
+	var sum int
+	sum = 1 + CheckPreviousTrain(road, carIndex) + CheckNextTrain(road, carIndex)
+
+	if sum >= 3 {
+		return true
+	} else {
+		return false
+	}
+}
+
+func CheckPreviousTrain(road Road, carIndex int) int {
+	var sum int
+
+	prevIndex := GetPrev(road, carIndex)
+	if prevIndex > roadLength {
+		return sum
+	} else {
+		if road[prevIndex].kind == 1 {
+			return sum
+		} else if road[prevIndex].kind == 2 {
+			sum += 1 + CheckPreviousTrain(road, prevIndex)
+		}
+	}
+
+	return sum
+}
+
+func CheckNextTrain(road Road, carIndex int) int {
+	var sum int
+
+	nextIndex := GetNext(road, carIndex)
+	if nextIndex < 0 {
+		return sum
+	} else {
+		if road[nextIndex].kind == 1 {
+			return sum
+		} else if road[nextIndex].kind == 2 {
+			sum += 1 + CheckNextTrain(road, nextIndex)
+		}
+	}
+
+	return sum
 }
