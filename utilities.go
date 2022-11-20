@@ -16,13 +16,13 @@ func GetPrev(currentRoad Road, index int) int {
 }
 
 func GetNext(currentRoad Road, index int) int {
-	for c := index - 1; c <= 0; c-- {
+	for c := index - 1; c >= 0; c-- {
 		if currentRoad[c].kind != 0 {
 			return c
 		}
 	}
 
-	return 0
+	return -1
 }
 
 func GetSDVmindis(k, m int, currentroad Road) int {
@@ -115,7 +115,10 @@ func ProduceMulti(currentRoads *MultiRoad, kindPossiblity float64) bool {
 			return false
 		}
 	}
-	
+
 	return true
 }
-	
+
+func Checktrain(num int) bool {
+	return false
+}

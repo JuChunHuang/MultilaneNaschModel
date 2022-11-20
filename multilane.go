@@ -259,27 +259,24 @@ func ChangeLane(currentRoad MultiRoad) MultiRoad {
 
 func ChangeNSDVTurningLight(currentRoad MultiRoad, curLane, curCarIndex int) int {
 	currentCar := currentRoad[curLane][curCarIndex]
-	kind := currentCar.kind
+	// kind := currentCar.kind
 	// speed := currentCar.speed
 	turningLight := currentCar.turninglight
 	// curAheadCarIndex := GetPrev(currentRoad[curLane], curCarIndex)
 	// curAheadCar := currentRoad[curLane][curAheadCarIndex]
 	// delta_d := curAheadCarIndex - curCarIndex
 	// NSDV situation
-	if kind == 1 {
-		if turningLight == 0 {
-			for aimLane := curLane - 1; aimLane < curLane+2; aimLane++ {
-				if !ValidLane(aimLane) {
-				}
+	for aimLane := curLane - 1; aimLane < curLane+2; aimLane++ {
+		if !ValidLane(aimLane) {
+		} else {
+			lcm := LCMforNSDV(currentRoad, curLane, aimLane, curCarIndex)
+			lcs := LCSforNSDV(currentRoad, curLane, aimLane, curCarIndex)
 
-				lcm := LCMforNSDV(currentRoad, curLane, aimLane, curCarIndex)
-				lcs := LCSforNSDV(currentRoad, curLane, aimLane, curCarIndex)
-
-				if lcm && lcs {
-					turningLight = aimLane - curLane
-				}
+			if lcm && lcs {
+				turningLight = aimLane - curLane
 			}
 		}
+
 	}
 
 	return turningLight
