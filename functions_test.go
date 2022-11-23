@@ -6,7 +6,7 @@ import (
 )
 
 func TestCheckPreviousTrain(t *testing.T) {
-	//change roadLength = 5
+	//change roadLength = 8
 	var road Road
 
 	var a Car
@@ -14,19 +14,28 @@ func TestCheckPreviousTrain(t *testing.T) {
 
 	var b Car
 	b.kind = 2
+	b.speed = 1
 
 	var c Car
 	c.kind = 0
 
 	var d Car
 	d.kind = 2
+	d.speed = 3
 
 	var e Car
 	e.kind = 2
+	e.speed = 4
 
-	road = append(road, a, b, c, d, e)
+	var emp Car
+	emp.kind = 0
 
-	if CheckPreviousTrain(road, 1) == 2 {
+	road = append(road, a, d, emp, emp, emp, emp, emp, e)
+	road[1] = d
+	road[7] = e
+
+	if CheckPreviousTrain(road, 1) == 1 {
+		fmt.Print(GetSDVmindis(1, 7, road))
 		fmt.Println("Pass the CheckPreviousTrain test!")
 	} else {
 		t.Error("Can't pass the CheckPreviousTrain test!")
@@ -34,7 +43,7 @@ func TestCheckPreviousTrain(t *testing.T) {
 }
 
 func TestCheckNextTrain(t *testing.T) {
-	//change roadLength = 5
+	//change roadLength = 8
 	var road Road
 
 	var a Car
@@ -42,19 +51,28 @@ func TestCheckNextTrain(t *testing.T) {
 
 	var b Car
 	b.kind = 2
+	b.speed = 1
 
 	var c Car
 	c.kind = 0
 
 	var d Car
 	d.kind = 2
+	d.speed = 3
 
 	var e Car
 	e.kind = 2
+	e.speed = 4
 
-	road = append(road, a, b, c, d, e)
+	var emp Car
+	emp.kind = 0
 
-	if CheckNextTrain(road, 4) == 2 {
+	road = append(road, a, d, emp, emp, emp, emp, emp, e)
+	road[1] = d
+	road[7] = e
+
+	if CheckNextTrain(road, 7) == 1 {
+		// fmt.Print(GetSDVmindis(1, 7, road))
 		fmt.Println("Pass the CheckPreviousTrain test!")
 	} else {
 		t.Error("Can't pass the CheckPreviousTrain test!")
