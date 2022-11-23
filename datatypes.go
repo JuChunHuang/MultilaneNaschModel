@@ -8,6 +8,7 @@ const dedicatedLane = 0
 const p1 = 0.94
 const p2 = 0.5
 const p3 = 0.2
+const p4 = 0.7
 const cp1 = 0.8
 const cp2 = 0.5
 const cp3 = 0.1

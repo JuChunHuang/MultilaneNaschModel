@@ -5,9 +5,19 @@ import (
 	"time"
 )
 
-func GetPrev(currentRoad Road, index int) int {
+func GetPrevCar(currentRoad Road, index int) int {
 	for c := index + 1; c < roadLength; c++ {
-		if currentRoad[c].kind != 0 {
+		if currentRoad[c].kind == 1 || currentRoad[c].kind == 2 {
+			return c
+		}
+	}
+
+	return 2 * roadLength
+}
+
+func GetPrevLight(currentRoad Road, index int) int {
+	for c := index + 1; c < roadLength; c++ {
+		if currentRoad[c].kind > 2 {
 			return c
 		}
 	}
@@ -71,7 +81,7 @@ func Produce(currentRoad *Road, kindPossiblity float64) bool {
 	// determin the speed range that the car can obtain
 	if (*currentRoad)[0].kind == 0 {
 		initSpeedBound = 0
-		prevCar := GetPrev((*currentRoad), 0)
+		prevCar := GetPrevCar((*currentRoad), 0)
 
 		// if no car before
 		if prevCar > roadLength {
@@ -109,14 +119,20 @@ func Produce(currentRoad *Road, kindPossiblity float64) bool {
 }
 
 func ProduceMulti(currentRoads *MultiRoad, kindPossiblity float64) bool {
+	count := 0
 	for i := range *currentRoads {
 		a := Produce(&((*currentRoads)[i]), kindPossiblity)
 		if a == false {
-			return false
+			count += 1
 		}
 	}
 
-	return true
+	if count == 5 {
+		return false
+	} else {
+		return true
+	}
+
 }
 
 func GetTrainHead(road Road, carIndex int) int {
@@ -126,7 +142,7 @@ func GetTrainHead(road Road, carIndex int) int {
 	if index == 0 {
 		return trainHeadIndex
 	} else {
-		for i := carIndex + 1; i < roadLength-1; i++ {
+		for i := carIndex + 1; i < roadLength; i++ {
 			if road[i].kind == 0 {
 				trainHeadIndex++
 
@@ -148,6 +164,7 @@ func CheckTrain(road Road, carIndex int) bool {
 	sum = 1 + CheckPreviousTrain(road, carIndex) + CheckNextTrain(road, carIndex)
 
 	if sum >= 3 {
+
 		return true
 	} else {
 		return false
@@ -157,7 +174,7 @@ func CheckTrain(road Road, carIndex int) bool {
 func CheckPreviousTrain(road Road, carIndex int) int {
 	var sum int
 
-	prevIndex := GetPrev(road, carIndex)
+	prevIndex := GetPrevCar(road, carIndex)
 	if prevIndex > roadLength {
 		return sum
 	} else {
