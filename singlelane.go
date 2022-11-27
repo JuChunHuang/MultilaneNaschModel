@@ -42,10 +42,10 @@ func SingleLaneSimulation(currentRoad Road) Road {
 
 		if kind == 1 {
 			if prevCar.backlight == -1 && delta_d > safeSpaceMin[speed] && delta_d < safeSpaceMax[speed] &&
-				(deltaDLight > safetraffic[speed] || deltaDLight < 0) {
+				(deltaDLight > safetraffic[speed]) {
 				probOfDecel = p1
 			} else if prevCar.backlight >= 0 && delta_d > safeSpaceMin[speed] && delta_d < safeSpaceMax[speed] &&
-				(deltaDLight > safetraffic[speed] || deltaDLight < 0) {
+				(deltaDLight > safetraffic[speed]) {
 				probOfDecel = p2
 			} else if speed == 0 {
 				probOfDecel = p3
@@ -100,6 +100,7 @@ func SingleLaneSimulation(currentRoad Road) Road {
 				newRoad[newIndex].backlight = newLight
 			}
 		} else if (kind == 2 && roadLength/2 <= i) || prevLight.kind == 5 {
+
 			if delta_d >= safeSpaceMax[speed] {
 				newSpeed = speed + 1
 				newLight = 1
@@ -157,9 +158,7 @@ func SingleLaneSimulation(currentRoad Road) Road {
 			if prevCarIndex > prevLightIndex {
 				delta_d = prevLightIndex - i
 				prevCarIndex = prevLightIndex
-
 			}
-
 			if delta_d >= safeSpaceMax[speed] {
 				newSpeed = speed + 1
 				newLight = 1
