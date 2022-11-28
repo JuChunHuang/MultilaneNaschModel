@@ -15,6 +15,7 @@ func main() {
 	trafficLightPos := roadLength / 2
 	initialSingleRoad := initialSingleLane(trafficLightPos)
 
+
 	// Set Traffic light
 	// trafficLightPos := roadLength / 2
 	// for i := 0; i < laneNum; i++ {
@@ -27,6 +28,7 @@ func main() {
 	trafficLightTime[2] = 30 // green light
 	numGens := 1000
 	cellWidth := 20
+
 
 	// timePoints := PlayMultiLaneModel(initialRoad, numGens, trafficLightPos, trafficLightTime)
 	// fmt.Println("finish")
@@ -72,7 +74,6 @@ func PlaySingleLaneModel(initialRoad Road, numGens, lightPos int, trafficLightTi
 	roads[0] = initialRoad
 	oneRound := trafficLightTime[0] + trafficLightTime[1] + trafficLightTime[2]
 	for i := 1; i <= numGens; i++ {
-		// fmt.Println(i)
 		t := i % oneRound
 		if 1 <= t && t <= 30 {
 			roads[i-1][lightPos].kind = 3 // red light
@@ -89,11 +90,11 @@ func PlaySingleLaneModel(initialRoad Road, numGens, lightPos int, trafficLightTi
 }
 
 func PlayMultiLaneModel(initialRoad MultiRoad, numGens, lightPos int, lightLane, trafficLightTime []int) []MultiRoad {
+
 	roads := make([]MultiRoad, numGens+1)
 	roads[0] = initialRoad
 	oneRound := trafficLightTime[0] + trafficLightTime[1] + trafficLightTime[2]
 	for i := 1; i <= numGens; i++ {
-		// fmt.Println(i)
 		t := i % oneRound
 		for _, val := range lightLane {
 			if 1 <= t && t <= 30 {
