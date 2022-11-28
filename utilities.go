@@ -96,12 +96,18 @@ func Produce(currentRoad *Road, kindPossiblity float64) bool {
 			}
 		} else if kind == 2 && (*currentRoad)[prevCar].kind == 2 {
 			// if the new car is a SDV and prevCar is a SDV
+
 			for i := 0; i < maxSpeed; i++ {
 				minSpace := safeSpaceMin[i] - safeSpaceMin[(*currentRoad)[prevCar].speed] + 2*(*currentRoad)[prevCar].speed + 1
 				if prevCar < minSpace {
 					initSpeedBound = i - 1
 					break
 				}
+				// initSpeedBound = (*currentRoad)[prev].speed
+				// minSpace := GetSDVmindis(0, prevCar, *currentRoad)
+				// delta_d := prevCar - 0
+				// if delta_d < minSpace {
+				// 	return false
 			}
 		}
 	}
@@ -178,10 +184,15 @@ func CheckPreviousTrain(road Road, carIndex int) int {
 	if prevIndex > roadLength {
 		return sum
 	} else {
-		if road[prevIndex].kind == 1 {
-			return sum
-		} else if road[prevIndex].kind == 2 {
+
+		distance := prevIndex - carIndex
+		Dmin := GetSDVmindis(carIndex, prevIndex, road)
+		// only count the previous SDV car into consideration when the distance bewteen
+		// previous SDV and current SDV is equal to SDV min distance
+		if road[prevIndex].kind == 2 && distance == Dmin {
 			sum += 1 + CheckPreviousTrain(road, prevIndex)
+		} else {
+			return sum
 		}
 	}
 
@@ -192,13 +203,19 @@ func CheckNextTrain(road Road, carIndex int) int {
 	var sum int
 
 	nextIndex := GetNext(road, carIndex)
+
 	if nextIndex < 0 {
 		return sum
 	} else {
-		if road[nextIndex].kind == 1 {
-			return sum
-		} else if road[nextIndex].kind == 2 {
+		distance := carIndex - nextIndex
+		Dmin := GetSDVmindis(nextIndex, carIndex, road)
+
+		// only count the next SDV car into consideration when the distance bewteen
+		// next SDV and current SDV is equal to SDV min distance
+		if road[nextIndex].kind == 2 && distance == Dmin {
 			sum += 1 + CheckNextTrain(road, nextIndex)
+		} else {
+			return sum
 		}
 	}
 

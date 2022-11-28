@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"math/rand"
 )
 
@@ -17,7 +18,7 @@ func SingleLaneSimulation(currentRoad Road) Road {
 	carCnt := 0
 
 	Produce(&currentRoad, 0.5)
-	for i := roadLength - 1; i >= 0; i++ {
+	for i := roadLength - 1; i >= 0; i-- {
 		currentCar := currentRoad[i]
 		kind := currentCar.kind
 		speed := currentCar.speed
@@ -31,26 +32,21 @@ func SingleLaneSimulation(currentRoad Road) Road {
 		}
 
 		if prevLightIndex >= roadLength {
-			prevLight.kind = 3
+			prevLight.kind = -1
+		} else {
+			prevLight = currentRoad[prevLightIndex]
 		}
 
 		delta_d := prevCarIndex - i
 		deltaDLight := prevLightIndex - i
 
 		if kind == 1 {
-			// the car is a NSDV, change the speed of the car
-			if prevCar.backlight == -1 && delta_d > safeSpaceMin[speed] && delta_d < safeSpaceMax[speed] {
+			if prevCar.backlight == -1 && delta_d > safeSpaceMin[speed] && delta_d < safeSpaceMax[speed] &&
+				(deltaDLight > safetraffic[speed] || deltaDLight < 0) {
 				probOfDecel = p1
-			} else if prevCar.backlight >= 0 && delta_d > safeSpaceMin[speed] && delta_d < safeSpaceMax[speed] {
+			} else if prevCar.backlight >= 0 && delta_d > safeSpaceMin[speed] && delta_d < safeSpaceMax[speed] &&
+				(deltaDLight > safetraffic[speed] || deltaDLight < 0) {
 				probOfDecel = p2
-			} else if prevLight.kind == 4 && deltaDLight > safeSpaceMin[0] && deltaDLight < safeSpaceMax[0] {
-				probOfDecel = p3
-			} else if prevLight.kind == 4 && deltaDLight < safeSpaceMin[0] {
-				probOfDecel = p4
-			} else if prevLight.kind == 5 && deltaDLight > safeSpaceMin[0] && deltaDLight < safeSpaceMax[0] {
-				probOfDecel = p4
-			} else if prevLight.kind == 5 && deltaDLight < safeSpaceMin[0] {
-				probOfDecel = p1
 			} else if speed == 0 {
 				probOfDecel = p3
 			} else {
@@ -81,24 +77,29 @@ func SingleLaneSimulation(currentRoad Road) Road {
 				}
 			}
 
+			if deltaDLight >= 0 && deltaDLight < safetraffic[speed] && (prevLight.kind == 3 || prevLight.kind == 4) {
+				newSpeed = 0
+				newLight = -1
+			}
+
+			if newSpeed < 0 {
+				newSpeed = 0
+			} else if newSpeed > 10 {
+				newSpeed = 10
+			}
+
 			newIndex := i + newSpeed
 			if newIndex >= roadLength {
 				carCnt++
 			} else if newIndex < roadLength && newRoad[newIndex].kind != 0 {
-				panic("NSDV crashes something.")
+				fmt.Println("NSDV crashes something", newIndex, newRoad[newIndex].kind)
+				// panic("NSDV crashes something.")
 			} else {
-				if newSpeed < 0 {
-					newSpeed = 0
-				} else if newSpeed > 10 {
-					newSpeed = 10
-				}
 				newRoad[newIndex].speed = newSpeed
 				newRoad[newIndex].kind = kind
 				newRoad[newIndex].backlight = newLight
 			}
-		}
-
-		if kind == 2 {
+		} else if kind == 2 && (roadLength/2 <= i || prevLight.kind == 5) {
 			if delta_d >= safeSpaceMax[speed] {
 				newSpeed = speed + 1
 				newLight = 1
@@ -134,25 +135,84 @@ func SingleLaneSimulation(currentRoad Road) Road {
 				newAccel = currentRoad[trainHead].accel
 			}
 
+			if newSpeed < 0 {
+				newSpeed = 0
+			} else if newSpeed > 10 {
+				newSpeed = 10
+			}
 			newIndex := i + newSpeed
+
 			if newIndex >= roadLength {
 				carCnt++
 			} else if newIndex < roadLength && newRoad[newIndex].kind != 0 {
-				panic("SDV crashes something.")
+				// panic("SDV crashes something.")
 			} else {
-				if newSpeed < 0 {
-					newSpeed = 0
-				} else if newSpeed > 10 {
-					newSpeed = 10
-				}
 				newRoad[newIndex].speed = newSpeed
 				newRoad[newIndex].backlight = newLight
 				newRoad[newIndex].accel = newAccel
 				newRoad[newIndex].kind = kind
 			}
 
+		} else if kind == 2 && roadLength/2 > i && (prevLight.kind == 3 || prevLight.kind == 4) {
+			if prevCarIndex > prevLightIndex {
+				delta_d = prevLightIndex - i
+				prevCarIndex = prevLightIndex
+
+			}
+
+			if delta_d >= safeSpaceMax[speed] {
+				newSpeed = speed + 1
+				newLight = 1
+				newAccel = 1
+			} else if prevCar.kind == 1 && prevCar.backlight != -1 && delta_d >= safeSpaceMin[speed] {
+				newSpeed = speed + 1
+				newLight = 1
+				newAccel = 1
+			} else if prevCar.kind == 2 && delta_d > GetSDVmindis(i, prevCarIndex, currentRoad) {
+				newSpeed = speed + 1
+				newLight = 1
+				newAccel = 1
+			} else if prevCar.kind == 2 && delta_d <= GetSDVmindis(i, prevCarIndex, currentRoad) && prevCar.speed != 0 {
+				newSpeed = speed - 1
+				newLight = -1
+				newAccel = 0
+			} else if prevCar.kind == 2 && delta_d <= GetSDVmindis(i, prevCarIndex, currentRoad) && prevCar.speed == 0 {
+				newSpeed = 0
+				newLight = 0
+				newAccel = 0
+
+			} else if prevLight.kind > 3 && deltaDLight <= safeSpaceMin[0] {
+				newSpeed = 0
+				newLight = 0
+				newAccel = 0
+			} else {
+				newLight = 0
+				newAccel = 0
+			}
+
+			if delta_d < safetraffic[speed] {
+				newSpeed = 0
+				newLight = -1
+			}
+
+			newIndex := i + newSpeed
+			if newIndex > roadLength/2 {
+				newSpeed = 0
+			}
+			if newSpeed < 0 {
+				newSpeed = 0
+			} else if newSpeed > 10 {
+				newSpeed = 10
+			}
+
+			newRoad[newIndex].speed = newSpeed
+			newRoad[newIndex].backlight = newLight
+			newRoad[newIndex].accel = newAccel
+			newRoad[newIndex].kind = kind
+
 		}
 	}
+	// fmt.Println(carCnt)
 
 	return newRoad
 }

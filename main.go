@@ -26,17 +26,19 @@ func main() {
 	trafficLightTime := make([]int, 3)
 	trafficLightTime[0] = 30 // red light
 	trafficLightTime[1] = 5  // yellow light
-	trafficLightTime[3] = 30 // green light
+	trafficLightTime[2] = 30 // green light
 	numGens := 1000
-	cellWidth := 50
+	cellWidth := 60
 
 	// timePoints := PlayMultiLaneModel(initialRoad, numGens, trafficLightPos, trafficLightTime)
 	// fmt.Println("finish")
 	// fmt.Println(timePoints)
+	// imageList := BoardsToImages(timePoints, cellWidth)
+	// gifhelper.ImagesToGIF(imageList, "cars")
 
 	timePointsSingle := PlaySingleLaneModel(initialRoad, numGens, trafficLightPos, trafficLightTime)
 	fmt.Println("finish")
-	fmt.Println(timePointsSingle)
+
 	var timePoints []MultiRoad
 	timePoints = make([]MultiRoad, numGens+1)
 	for i := range timePoints {
@@ -55,18 +57,14 @@ func PlaySingleLaneModel(initialRoad Road, numGens, lightPos int, trafficLightTi
 	for i := 1; i <= numGens; i++ {
 		t := i % oneRound
 		if 1 <= t && t <= 30 {
-			for k := 0; k < laneNum; k++ {
-				initialRoad[lightPos].kind = 3 // red light
-			}
-		} else if 30 < t && t <= 35 {
-			for k := 0; k < laneNum; k++ {
-				initialRoad[lightPos].kind = 4 // yellow light
-			}
+			roads[i-1][lightPos].kind = 3 // red light
+		} else if 30 < t && t <= 60 {
+			roads[i-1][lightPos].kind = 5 // green light
 		} else {
-			initialRoad[lightPos].kind = 5 // green light
+			roads[i-1][lightPos].kind = 4 // yellow light
 		}
 		roads[i] = SingleLaneSimulation(roads[i-1])
-		//fmt.Println(roads[i])
+		// fmt.Println(roads[i])
 	}
 
 	return roads
