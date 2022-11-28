@@ -69,14 +69,6 @@ func ChangeSpeed(currentRoad MultiRoad) (MultiRoad, int) {
 				} else if prevCar.backlight >= 0 && delta_d > safeSpaceMin[speed] && delta_d < safeSpaceMax[speed] &&
 					(deltaDLight > safetraffic[speed] || deltaDLight < 0) {
 					probOfDecel = p2
-				} else if prevLight.kind == 4 && deltaDLight > safeSpaceMin[0] && deltaDLight < safeSpaceMax[0] {
-					probOfDecel = p3
-				} else if prevLight.kind == 4 && deltaDLight < safeSpaceMin[0] {
-					probOfDecel = p4
-				} else if prevLight.kind == 5 && deltaDLight > safeSpaceMin[0] && deltaDLight < safeSpaceMax[0] {
-					probOfDecel = p4
-				} else if prevLight.kind == 5 && deltaDLight < safeSpaceMin[0] {
-					probOfDecel = p1
 				} else if speed == 0 {
 					probOfDecel = p3
 				} else {
