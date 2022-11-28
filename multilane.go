@@ -15,7 +15,9 @@ func MultiLaneSimulation(currentRoad MultiRoad) MultiRoad {
 	// return a MultiRoad that all cars move to their new index based on newspeed
 	newRoad, carCnt := ChangeSpeed(currentRoad)
 
-	fmt.Println(carCnt)
+	if carCnt != 0 {
+		fmt.Println("CarCnt:", carCnt)
+	}
 
 	return newRoad
 }
@@ -51,7 +53,9 @@ func ChangeSpeed(currentRoad MultiRoad) (MultiRoad, int) {
 			}
 
 			if prevLightIndex >= roadLength {
-				prevLight.kind = 3
+				prevLight.kind = -1
+			} else {
+				prevLight = currentRoad[curLane][prevLightIndex]
 			}
 
 			delta_d := prevCarIndex - j
@@ -65,18 +69,6 @@ func ChangeSpeed(currentRoad MultiRoad) (MultiRoad, int) {
 				} else if prevCar.backlight >= 0 && delta_d > safeSpaceMin[speed] && delta_d < safeSpaceMax[speed] &&
 					(deltaDLight > safetraffic[speed] || deltaDLight < 0) {
 					probOfDecel = p2
-				} else if prevLight.kind == 4 && deltaDLight > safeSpaceMin[0] && deltaDLight < safeSpaceMax[0] &&
-					(deltaDLight > safetraffic[speed] || deltaDLight < 0) {
-					probOfDecel = p3
-				} else if prevLight.kind == 4 && deltaDLight < safeSpaceMin[0] &&
-					(deltaDLight > safetraffic[speed] || deltaDLight < 0) {
-					probOfDecel = p4
-				} else if prevLight.kind == 5 && deltaDLight > safeSpaceMin[0] && deltaDLight < safeSpaceMax[0] &&
-					(deltaDLight > safetraffic[speed] || deltaDLight < 0) {
-					probOfDecel = p4
-				} else if prevLight.kind == 5 && deltaDLight < safeSpaceMin[0] &&
-					(deltaDLight > safetraffic[speed] || deltaDLight < 0) {
-					probOfDecel = p1
 				} else if speed == 0 {
 					probOfDecel = p3
 				} else {
@@ -124,11 +116,6 @@ func ChangeSpeed(currentRoad MultiRoad) (MultiRoad, int) {
 				} else if newIndex < roadLength && newRoad[curLane][newIndex].kind != 0 {
 					//panic("NSDV crashes something.")
 				} else {
-					if newSpeed < 0 {
-						newSpeed = 0
-					} else if newSpeed > 10 {
-						newSpeed = 10
-					}
 					newRoad[curLane][newIndex].speed = newSpeed
 					newRoad[curLane][newIndex].kind = kind
 					newRoad[curLane][newIndex].backlight = newLight
@@ -189,6 +176,161 @@ func ChangeSpeed(currentRoad MultiRoad) (MultiRoad, int) {
 			}
 		}
 	}
+	// 	}else if kind == 2 && (roadLength/2 <= i || prevLight.kind == 5) {
+	// 			if delta_d >= safeSpaceMax[speed] {
+	// 				newSpeed = speed + 1
+	// 				newLight = 1
+	// 				newAccel = 1
+	// 			} else if prevCar.kind == 1 && prevCar.backlight != -1 && delta_d >= safeSpaceMin[speed] {
+	// 				newSpeed = speed + 1
+	// 				newLight = 1
+	// 				newAccel = 1
+	// 			} else if prevCar.kind == 2 && delta_d > GetSDVmindis(i, prevCarIndex, currentRoad) {
+	// 				newSpeed = speed + 1
+	// 				newLight = 1
+	// 				newAccel = 1
+	// 			} else if prevCar.kind == 2 && delta_d <= GetSDVmindis(i, prevCarIndex, currentRoad) {
+	// 				newSpeed = speed - 1
+	// 				newLight = -1
+	// 				newAccel = 0
+	// 			} else if prevLight.kind > 3 && deltaDLight <= safeSpaceMin[0] {
+	// 				newSpeed = speed - 1
+	// 				newLight = -1
+	// 				newAccel = 0
+	// 			} else {
+	// 				newLight = 0
+	// 				newAccel = 0
+	// 			}
+
+	// 			trainHead := GetTrainHead(currentRoad, i)
+	// 			if CheckTrain(currentRoad, i) == true && trainHead != i {
+	// 				if delta_d != GetSDVmindis(i, prevCarIndex, currentRoad) {
+	// 					panic("not SDV Train")
+	// 				}
+	// 				newSpeed = currentRoad[trainHead].speed
+	// 				newLight = currentRoad[trainHead].backlight
+	// 				newAccel = currentRoad[trainHead].accel
+	// 			}
+
+	// 			if newSpeed < 0 {
+	// 				newSpeed = 0
+	// 			} else if newSpeed > 10 {
+	// 				newSpeed = 10
+	// 			}
+	// 			newIndex := i + newSpeed
+
+	// 			if newIndex >= roadLength {
+	// 				carCnt++
+	// 			} else if newIndex < roadLength && newRoad[newIndex].kind != 0 {
+	// 				// panic("SDV crashes something.")
+	// 			} else {
+	// 				newRoad[newIndex].speed = newSpeed
+	// 				newRoad[newIndex].backlight = newLight
+	// 				newRoad[newIndex].accel = newAccel
+	// 				newRoad[newIndex].kind = kind
+	// 			}
+
+	// 		} else if kind == 2 && roadLength/2 > i && (prevLight.kind == 3 || prevLight.kind == 4) {
+	// 			if prevCarIndex > prevLightIndex {
+	// 				delta_d = prevLightIndex - i
+	// 				prevCarIndex = prevLightIndex
+	// 			}
+	// 			if delta_d >= safeSpaceMax[speed] {
+	// 				newSpeed = speed + 1
+	// 				newLight = 1
+	// 				newAccel = 1
+	// 			} else if prevCar.kind == 1 && prevCar.backlight != -1 && delta_d >= safeSpaceMin[speed] {
+	// 				newSpeed = speed + 1
+	// 				newLight = 1
+	// 				newAccel = 1
+	// 			} else if prevCar.kind == 2 && delta_d > GetSDVmindis(i, prevCarIndex, currentRoad) {
+	// 				newSpeed = speed + 1
+	// 				newLight = 1
+	// 				newAccel = 1
+	// 			} else if prevCar.kind == 2 && delta_d <= GetSDVmindis(i, prevCarIndex, currentRoad) {
+	// 				newSpeed = speed - 1
+	// 				newLight = -1
+	// 				newAccel = 0
+	// 			} else if prevLight.kind >= 3 && deltaDLight <= safeSpaceMin[0] {
+	// 				newSpeed = 0
+	// 				newLight = 0
+	// 				newAccel = 0
+	// 			} else {
+	// 				newLight = 0
+	// 				newAccel = 0
+	// 			}
+
+	// 			if delta_d < safetraffic[speed] {
+	// 				newSpeed = 0
+	// 				newLight = -1
+	// 			}
+
+	// 			newIndex := i + newSpeed
+	// 			if newIndex > roadLength/2 {
+	// 				newSpeed = 0
+	// 			}
+	// 			if newSpeed < 0 {
+	// 				newSpeed = 0
+	// 			} else if newSpeed > 10 {
+	// 				newSpeed = 10
+	// 			}
+
+	// 			newRoad[newIndex].speed = newSpeed
+	// 			newRoad[newIndex].backlight = newLight
+	// 			newRoad[newIndex].accel = newAccel
+	// 			newRoad[newIndex].kind = kind
+
+	// 			if delta_d >= safeSpaceMax[speed] {
+	// 				newSpeed = speed + 1
+	// 				newLight = 1
+	// 				newAccel = 1
+	// 			} else if prevCar.kind == 1 && prevCar.backlight != -1 && delta_d >= safeSpaceMin[speed] {
+	// 				newSpeed = speed + 1
+	// 				newLight = 1
+	// 				newAccel = 1
+	// 			} else if prevCar.kind == 2 && delta_d > GetSDVmindis(i, prevCarIndex, currentRoad) {
+	// 				newSpeed = speed + 1
+	// 				newLight = 1
+	// 				newAccel = 1
+	// 			} else if prevCar.kind == 2 && delta_d <= GetSDVmindis(i, prevCarIndex, currentRoad) && prevCar.speed != 0 {
+	// 				newSpeed = speed - 1
+	// 				newLight = -1
+	// 				newAccel = 0
+	// 			} else if prevCar.kind == 2 && delta_d <= GetSDVmindis(i, prevCarIndex, currentRoad) && prevCar.speed == 0 {
+	// 				newSpeed = 0
+	// 				newLight = 0
+	// 				newAccel = 0
+
+	// 			} else if prevLight.kind > 3 && deltaDLight <= safeSpaceMin[0] {
+	// 				newSpeed = 0
+	// 				newLight = 0
+	// 				newAccel = 0
+	// 			} else {
+	// 				newLight = 0
+	// 				newAccel = 0
+	// 			}
+
+	// 			if delta_d < safetraffic[speed] {
+	// 				newSpeed = 0
+	// 				newLight = -1
+	// 			}
+
+	// 			newIndex = i + newSpeed
+	// 			if newIndex > roadLength/2 {
+	// 				newSpeed = 0
+	// 			}
+	// 			if newSpeed < 0 {
+	// 				newSpeed = 0
+	// 			} else if newSpeed > 10 {
+	// 				newSpeed = 10
+	// 			}
+
+	// 			newRoad[newIndex].speed = newSpeed
+	// 			newRoad[newIndex].backlight = newLight
+	// 			newRoad[newIndex].accel = newAccel
+	// 			newRoad[newIndex].kind = kind
+	// 		}
+	// 	}
 
 	return newRoad, carCnt
 }
@@ -338,6 +480,10 @@ func LCSforNSDV(road MultiRoad, curLane, aimLane, curCarIndex int) bool {
 	aimAheadDelta_d := aimAheadCarIndex - curCarIndex
 	// curBackDelta_d := curCarIndex - curNextCarIndex
 	aimBackDelta_d := curCarIndex - aimNextCarIndex
+
+	if aimNextCarIndex < 0 {
+		aimNextCarIndex = 0
+	}
 
 	if curAheadDelta_d >= safeSpaceMin[speed] && aimAheadDelta_d >= safeSpaceMin[speed] &&
 		aimBackDelta_d >= safeSpaceMin[road[aimLane][aimNextCarIndex].speed] {
