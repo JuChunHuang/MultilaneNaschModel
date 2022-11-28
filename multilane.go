@@ -28,6 +28,7 @@ func ChangeSpeed(currentRoad MultiRoad) (MultiRoad, int) {
 	var probOfDecel float64
 	var thresToDecel float64
 	var prevCar Car
+	var prevLight Car
 
 	newRoad := make(MultiRoad, laneNum)
 	for i := 0; i < laneNum; i++ {
@@ -36,25 +37,46 @@ func ChangeSpeed(currentRoad MultiRoad) (MultiRoad, int) {
 
 	carCnt = 0
 	for curLane := 0; curLane < laneNum; curLane++ {
-		for j := 0; j < roadLength; j++ {
+		for j := roadLength - 1; j >= 0; j-- {
 			currentCar := currentRoad[curLane][j]
 			kind := currentCar.kind
 			speed := currentCar.speed
-			prevCarIndex := GetPrev(currentRoad[curLane], j)
+			prevCarIndex := GetPrevCar(currentRoad[curLane], j)
+			prevLightIndex := GetPrevLight(currentRoad[curLane], j)
+
 			if prevCarIndex >= roadLength {
 				prevCar.backlight = -2
 			} else {
 				prevCar = currentRoad[curLane][prevCarIndex]
 			}
 
+			if prevLightIndex >= roadLength {
+				prevLight.kind = 3
+			}
+
 			delta_d := prevCarIndex - j
+			deltaDLight := prevLightIndex - j
 
 			if kind == 1 {
 				// the car is a NSDV, change the speed of the car
-				if prevCar.backlight == -1 && delta_d > safeSpaceMin[speed] && delta_d < safeSpaceMax[speed] {
+				if prevCar.backlight == -1 && delta_d > safeSpaceMin[speed] && delta_d < safeSpaceMax[speed] &&
+					(deltaDLight > safetraffic[speed] || deltaDLight < 0) {
 					probOfDecel = p1
-				} else if prevCar.backlight >= 0 && delta_d > safeSpaceMin[speed] && delta_d < safeSpaceMax[speed] {
+				} else if prevCar.backlight >= 0 && delta_d > safeSpaceMin[speed] && delta_d < safeSpaceMax[speed] &&
+					(deltaDLight > safetraffic[speed] || deltaDLight < 0) {
 					probOfDecel = p2
+				} else if prevLight.kind == 4 && deltaDLight > safeSpaceMin[0] && deltaDLight < safeSpaceMax[0] &&
+					(deltaDLight > safetraffic[speed] || deltaDLight < 0) {
+					probOfDecel = p3
+				} else if prevLight.kind == 4 && deltaDLight < safeSpaceMin[0] &&
+					(deltaDLight > safetraffic[speed] || deltaDLight < 0) {
+					probOfDecel = p4
+				} else if prevLight.kind == 5 && deltaDLight > safeSpaceMin[0] && deltaDLight < safeSpaceMax[0] &&
+					(deltaDLight > safetraffic[speed] || deltaDLight < 0) {
+					probOfDecel = p4
+				} else if prevLight.kind == 5 && deltaDLight < safeSpaceMin[0] &&
+					(deltaDLight > safetraffic[speed] || deltaDLight < 0) {
+					probOfDecel = p1
 				} else if speed == 0 {
 					probOfDecel = p3
 				} else {
@@ -85,11 +107,22 @@ func ChangeSpeed(currentRoad MultiRoad) (MultiRoad, int) {
 					}
 				}
 
+				if deltaDLight >= 0 && deltaDLight < safetraffic[speed] && (prevLight.kind == 3 || prevLight.kind == 4) {
+					newSpeed = 0
+					newLight = -1
+				}
+
+				if newSpeed < 0 {
+					newSpeed = 0
+				} else if newSpeed > 10 {
+					newSpeed = 10
+				}
+
 				newIndex := j + newSpeed
 				if newIndex >= roadLength {
 					carCnt++
 				} else if newIndex < roadLength && newRoad[curLane][newIndex].kind != 0 {
-					panic("NSDV crashes something.")
+					//panic("NSDV crashes something.")
 				} else {
 					if newSpeed < 0 {
 						newSpeed = 0
@@ -101,53 +134,47 @@ func ChangeSpeed(currentRoad MultiRoad) (MultiRoad, int) {
 					newRoad[curLane][newIndex].backlight = newLight
 				}
 			} else if kind == 2 {
-				if CheckTrain(currentRoad[curLane], j) == true {
-					trainHead := GetTrainHead(currentRoad[curLane], j)
 
-					if delta_d == GetSDVmindis(j, prevCarIndex, currentRoad[curLane]) &&
-						currentRoad[curLane][trainHead].accel == 1 {
-						newSpeed = speed + 1
-						newLight = 1
-						newAccel = 1
-					} else if delta_d == GetSDVmindis(j, prevCarIndex, currentRoad[curLane]) &&
-						currentRoad[curLane][trainHead].backlight == -1 {
-						newSpeed = speed - 1
-						newLight = -1
-						newAccel = 0
-					}
+				if delta_d >= safeSpaceMax[speed] {
+					newSpeed = speed + 1
+					newLight = 1
+					newAccel = 1
+				} else if prevCar.kind == 1 && prevCar.backlight != -1 && delta_d >= safeSpaceMin[speed] {
+					newSpeed = speed + 1
+					newLight = 1
+					newAccel = 1
+				} else if prevCar.kind == 2 && delta_d > GetSDVmindis(j, prevCarIndex, currentRoad[curLane]) {
+					newSpeed = speed + 1
+					newLight = 1
+					newAccel = 1
+				} else if prevCar.kind == 2 && delta_d <= GetSDVmindis(j, prevCarIndex, currentRoad[curLane]) {
+					newSpeed = speed - 1
+					newLight = -1
+					newAccel = 0
+				} else if prevLight.kind > 3 && deltaDLight <= safeSpaceMin[0] {
+					newSpeed = speed - 1
+					newLight = -1
+					newAccel = 0
 				} else {
-					if delta_d >= safeSpaceMax[speed] {
-						newSpeed = speed + 1
-						newLight = 1
-						newAccel = 1
+					newLight = 0
+					newAccel = 0
+				}
 
-					} else if prevCar.kind == 1 && prevCar.backlight != -1 && delta_d >= safeSpaceMin[speed] {
-						newSpeed = speed + 1
-						newLight = 1
-						newAccel = 1
-
-					} else if prevCar.kind == 2 && delta_d > GetSDVmindis(j, prevCarIndex, currentRoad[curLane]) {
-
-						newSpeed = speed + 1
-						newLight = 1
-						newAccel = 1
-
-					} else if prevCar.kind == 2 && delta_d <= GetSDVmindis(j, prevCarIndex, currentRoad[curLane]) {
-						newSpeed = speed - 1
-						newLight = -1
-						newAccel = 0
-
-					} else {
-						newLight = 0
-						newAccel = 0
+				trainHead := GetTrainHead(currentRoad[curLane], j)
+				if CheckTrain(currentRoad[curLane], j) == true && trainHead != j {
+					if delta_d != GetSDVmindis(j, prevCarIndex, currentRoad[curLane]) {
+						panic("not SDV Train")
 					}
+					newSpeed = currentRoad[curLane][trainHead].speed
+					newLight = currentRoad[curLane][trainHead].backlight
+					newAccel = currentRoad[curLane][trainHead].accel
 				}
 
 				newIndex := j + newSpeed
 				if newIndex >= roadLength {
 					carCnt++
-				} else if newIndex < roadLength && newRoad[curLane][newIndex].kind != 0 {
-					panic("SDV crashes something.")
+					// } else if newIndex < roadLength && newRoad[curLane][newIndex].kind != 0 {
+					// 	panic("SDV crashes something.")
 				} else {
 					if newSpeed < 0 {
 						newSpeed = 0
@@ -178,7 +205,7 @@ func ChangeLane(currentRoad MultiRoad) MultiRoad {
 			kind := currentCar.kind
 			speed := currentCar.speed
 			/////// should consider if there is no car in front of it
-			prevCarIndex := GetPrev(currentRoad[curLane], j)
+			prevCarIndex := GetPrevCar(currentRoad[curLane], j)
 			if prevCarIndex >= roadLength {
 				// no car in front of currentCar, no need to change lane
 				turninglight = 0
@@ -278,7 +305,7 @@ func ChangeNSDVTurningLight(currentRoad MultiRoad, curLane, curCarIndex int) int
 	// kind := currentCar.kind
 	// speed := currentCar.speed
 	turningLight := currentCar.turninglight
-	// curAheadCarIndex := GetPrev(currentRoad[curLane], curCarIndex)
+	// curAheadCarIndex := GetPrevCar(currentRoad[curLane], curCarIndex)
 	// curAheadCar := currentRoad[curLane][curAheadCarIndex]
 	// delta_d := curAheadCarIndex - curCarIndex
 	// NSDV situation
@@ -303,9 +330,9 @@ func LCSforNSDV(road MultiRoad, curLane, aimLane, curCarIndex int) bool {
 	// kind := road[curLane][curCarIndex].kind
 	speed := road[curLane][curCarIndex].speed
 	turningLight := road[curLane][curCarIndex].turninglight
-	curAheadCarIndex := GetPrev(road[curLane], curCarIndex)
+	curAheadCarIndex := GetPrevCar(road[curLane], curCarIndex)
 	// curNextCarIndex := GetNext(road[curLane], curCarIndex)
-	aimAheadCarIndex := GetPrev(road[aimLane], curCarIndex-1)
+	aimAheadCarIndex := GetPrevCar(road[aimLane], curCarIndex-1)
 	aimNextCarIndex := GetNext(road[aimLane], curCarIndex+1)
 	curAheadDelta_d := curAheadCarIndex - curCarIndex
 	aimAheadDelta_d := aimAheadCarIndex - curCarIndex
@@ -332,16 +359,35 @@ func LCMforNSDV(road MultiRoad, curLane, aimLane, curCarIndex int) bool {
 	// kind := road[curLane][curCarIndex].kind
 	speed := road[curLane][curCarIndex].speed
 	// turningLight := road[curLane][curCarIndex].turninglight
-	curAheadCarIndex := GetPrev(road[curLane], curCarIndex)
+	curAheadCarIndex := GetPrevCar(road[curLane], curCarIndex)
 	// curNextCarIndex := GetNext(road[curLane], curCarIndex)
-	aimAheadCarIndex := GetPrev(road[aimLane], curCarIndex)
+	aimAheadCarIndex := GetPrevCar(road[aimLane], curCarIndex)
 	// aimNextCarIndex := GetNext(road[aimLane], curCarIndex)
-	curAheadDelta_d := curAheadCarIndex - curCarIndex
-	aimAheadDelta_d := aimAheadCarIndex - curCarIndex
+
 	// curBackDelta_d := curCarIndex - curNextCarIndex
 	// aimBackDelta_d := curCarIndex - aimNextCarIndex
-	curAheadSpeed := road[curLane][curAheadCarIndex].speed
-	aimAheadSpeed := road[aimLane][aimAheadCarIndex].speed
+	var curAheadDelta_d int
+	var aimAheadDelta_d int
+	var curAheadSpeed int
+	var aimAheadSpeed int
+
+	// if there is no car ahead in the currentlane
+	if curAheadCarIndex > roadLength {
+		curAheadDelta_d = 0
+		curAheadSpeed = 0
+	} else {
+		curAheadDelta_d = curAheadCarIndex - curCarIndex
+		curAheadSpeed = road[curLane][curAheadCarIndex].speed
+	}
+
+	// if there is no car ahead in the aimlane
+	if aimAheadCarIndex > roadLength {
+		aimAheadDelta_d = roadLength
+		aimAheadSpeed = maxSpeed + 1
+	} else {
+		aimAheadDelta_d = aimAheadCarIndex - curCarIndex
+		aimAheadSpeed = road[aimLane][aimAheadCarIndex].speed
+	}
 
 	if curAheadDelta_d > safeSpaceMax[speed] {
 		res = false
@@ -366,13 +412,13 @@ func LCMforSDVLeft(road []Road, currentRoadIndex int, currentcarIndex int) bool 
 
 	// get the previous car from currentlane
 	var prevCar Car
-	prevCarIndex := GetPrev(road[currentRoadIndex], currentcarIndex)
+	prevCarIndex := GetPrevCar(road[currentRoadIndex], currentcarIndex)
 	prevCar = road[currentRoadIndex][prevCarIndex]
 	delta_dAB := prevCarIndex - currentcarIndex
 
 	// get the previous car from the lane in the left direction
 	var prevNeighborCar Car
-	prevNeighborCarIndex := GetPrev(road[currentRoadIndex-1], currentcarIndex)
+	prevNeighborCarIndex := GetPrevCar(road[currentRoadIndex-1], currentcarIndex)
 	prevNeighborCar = road[currentRoadIndex-1][prevNeighborCarIndex]
 	delta_dAE := prevNeighborCarIndex - currentcarIndex
 
@@ -397,13 +443,13 @@ func LCMforSDVRight(road []Road, currentRoadIndex int, currentcarIndex int) bool
 
 	// get the previous car from currentlane
 	var prevCar Car
-	prevCarIndex := GetPrev(road[currentRoadIndex], currentcarIndex)
+	prevCarIndex := GetPrevCar(road[currentRoadIndex], currentcarIndex)
 	prevCar = road[currentRoadIndex][prevCarIndex]
 	delta_dAB := prevCarIndex - currentcarIndex
 
 	// get the previous car from the lane in the left direction
 	var prevNeighborCar Car
-	prevNeighborCarIndex := GetPrev(road[currentRoadIndex+1], currentcarIndex)
+	prevNeighborCarIndex := GetPrevCar(road[currentRoadIndex+1], currentcarIndex)
 	prevNeighborCar = road[currentRoadIndex+1][prevNeighborCarIndex]
 	delta_dAE := prevNeighborCarIndex - currentcarIndex
 
@@ -433,10 +479,10 @@ func ChangeLaneSDVCondition(road MultiRoad, currentlane, num int) int {
 func LCSforSDVLeft(roads MultiRoad, currentRoadIndex int, currentcarIndex int) bool {
 
 	leftroadIndex := currentRoadIndex - 1
-	leftprevIndex := GetPrev(roads[currentRoadIndex], currentcarIndex)
+	leftprevIndex := GetPrevCar(roads[currentRoadIndex], currentcarIndex)
 
 	delta_dsamel := leftprevIndex - currentcarIndex
-	delta_differlprev := GetPrev(roads[leftroadIndex], currentcarIndex) - currentcarIndex
+	delta_differlprev := GetPrevCar(roads[leftroadIndex], currentcarIndex) - currentcarIndex
 	leftnextcarIndex := GetNext(roads[leftroadIndex], currentcarIndex)
 	delta_differlnext := currentcarIndex - leftnextcarIndex
 
@@ -455,10 +501,10 @@ func LCSforSDVLeft(roads MultiRoad, currentRoadIndex int, currentcarIndex int) b
 func LCSforSDVRight(roads MultiRoad, currentRoadIndex int, currentcarIndex int) bool {
 
 	rightroadIndex := currentRoadIndex + 1
-	rightprevIndex := GetPrev(roads[currentRoadIndex], currentcarIndex)
+	rightprevIndex := GetPrevCar(roads[currentRoadIndex], currentcarIndex)
 
 	delta_dsamel := rightprevIndex - currentcarIndex
-	delta_differlprev := GetPrev(roads[rightroadIndex], currentcarIndex) - currentcarIndex
+	delta_differlprev := GetPrevCar(roads[rightroadIndex], currentcarIndex) - currentcarIndex
 	rightnextcarIndex := GetNext(roads[rightroadIndex], currentcarIndex)
 	delta_differlnext := currentcarIndex - rightnextcarIndex
 

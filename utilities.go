@@ -55,6 +55,14 @@ func max(k, m int) int {
 	}
 }
 
+func min(k, m int) int {
+	if k < m {
+		return k
+	} else {
+		return m
+	}
+}
+
 func GenRandom(n int) int {
 	r := rand.New(rand.NewSource(time.Now().UnixNano()))
 	rn := r.Intn(n)
