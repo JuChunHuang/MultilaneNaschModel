@@ -15,7 +15,6 @@ func main() {
 	trafficLightPos := roadLength / 2
 	initialSingleRoad := initialSingleLane(trafficLightPos)
 
-
 	// Set Traffic light
 	// trafficLightPos := roadLength / 2
 	// for i := 0; i < laneNum; i++ {
@@ -28,7 +27,6 @@ func main() {
 	trafficLightTime[2] = 30 // green light
 	numGens := 1000
 	cellWidth := 20
-
 
 	// timePoints := PlayMultiLaneModel(initialRoad, numGens, trafficLightPos, trafficLightTime)
 	// fmt.Println("finish")
@@ -63,7 +61,7 @@ func main() {
 		}
 	}
 
-	fmt.Println("finish timePointsMul simulation.")
+	fmt.Println("Finish timePointsMul simulation!")
 
 	imageListMul := BoardsToImages(timePointsMul, cellWidth)
 	gifhelper.ImagesToGIF(imageListMul, "Multilane")

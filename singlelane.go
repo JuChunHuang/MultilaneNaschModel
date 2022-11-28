@@ -100,11 +100,11 @@ func SingleLaneSimulation(currentRoad Road) Road {
 				newRoad[newIndex].backlight = newLight
 			}
 		} else if kind == 2 && (roadLength/2 <= i || prevLight.kind == 5) {
-			if delta_d >= safeSpacSDVMin[speed] {
+			if delta_d >= safeSpaceSDVMin[speed] {
 				newSpeed = speed + 1
 				newLight = 1
 				newAccel = 1
-			} else if prevCar.kind == 1 && prevCar.backlight != -1 && delta_d >= safeSpacSDVMin[speed] {
+			} else if prevCar.kind == 1 && prevCar.backlight != -1 && delta_d >= safeSpaceMin[speed] {
 				newSpeed = speed + 1
 				newLight = 1
 				newAccel = 1
@@ -116,7 +116,7 @@ func SingleLaneSimulation(currentRoad Road) Road {
 				newSpeed = speed - 1
 				newLight = -1
 				newAccel = 0
-			} else if prevLight.kind > 3 && deltaDLight <= safeSpacSDVMin[0] {
+			} else if prevLight.kind > 3 && deltaDLight <= safeSpaceMin[0] {
 				newSpeed = speed - 1
 				newLight = -1
 				newAccel = 0

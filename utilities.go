@@ -40,7 +40,7 @@ func GetSDVmindis(k, m int, currentroad Road) int {
 	vm := currentroad[m].speed
 	va := currentroad[k].speed
 	maxv := max(vm-2, 0)
-	BrakingDistance = safeSpaceMin[maxv]
+	BrakingDistance = safeSpaceSDVMin[maxv]
 	maxva := max(safeSpaceMin[va]-BrakingDistance+1, 1)
 
 	return maxva
