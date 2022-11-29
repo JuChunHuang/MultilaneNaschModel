@@ -20,7 +20,7 @@ func (r MultiRoad) BoardToImage(scalingFactor int) image.Image {
 	height := len(r)
 	width := len(r[0])
 
-	c := canvas.CreateNewCanvas(width*scalingFactor/4, height*scalingFactor)
+	c := canvas.CreateNewCanvas(3*width*scalingFactor/3, 2*height*scalingFactor)
 	// c.SetFillColor(canvas.MakeColor(0, 0, 0))
 	// c.ClearRect(0, 0, rows, cols*scalingFactor)
 	// c.Fill()
@@ -43,12 +43,24 @@ func (r MultiRoad) BoardToImage(scalingFactor int) image.Image {
 
 			// x1, y1 := i, scalingFactor*cols
 			// x2, y2 := i+1, scalingFactor*(cols+1)
-			x1, y1 := j*scalingFactor/4, i*scalingFactor
-			x2, y2 := (j+1)*scalingFactor/4, (i+1)*scalingFactor
-
+			x1, y1 := (3*j)*scalingFactor/3, 2*i*scalingFactor
+			x2, y2 := (3*j+3)*scalingFactor/3, (2*i+2)*scalingFactor
 			c.ClearRect(x1, y1, x2, y2)
-
 			c.Fill()
+
+			c.SetFillColor(canvas.MakeColor(255, 255, 0))
+			if r[i][j].turninglight == -1 {
+				x1, y1 = (3*j)*scalingFactor/3, 2*i*scalingFactor
+				x2, y2 = (3*j+1)*scalingFactor/3, (2*i+1)*scalingFactor
+				c.ClearRect(x1, y1, x2, y2)
+				c.Fill()
+			} else if r[i][j].turninglight == 1 {
+				x1, y1 = (3*j)*scalingFactor/3, (2*i+1)*scalingFactor
+				x2, y2 = (3*j+1)*scalingFactor/3, (2*i+2)*scalingFactor
+				c.ClearRect(x1, y1, x2, y2)
+				c.Fill()
+			}
+
 		}
 	}
 
