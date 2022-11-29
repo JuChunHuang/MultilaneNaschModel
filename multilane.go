@@ -8,7 +8,7 @@ import (
 func MultiLaneSimulation(currentRoad MultiRoad, i int) MultiRoad {
 	// whether to produce a new car at the beginning of each road
 	if i%2 != 0 {
-		ProduceMulti(&currentRoad, 0)
+		ProduceMulti(&currentRoad, 0.5)
 	}
 
 	// return a MultiRoad that all cars have been determined changing lane or not
@@ -308,8 +308,8 @@ func ChangeLane(currentRoad MultiRoad) MultiRoad {
 	var turninglight int
 	var prevCar Car
 
-	turninglight = -1
 	for curLane := 0; curLane < laneNum; curLane++ {
+		turninglight = -1
 		for j := 0; j < roadLength; j++ {
 			currentCar := currentRoad[curLane][j]
 			kind := currentCar.kind
@@ -535,19 +535,30 @@ func LCMforSDVLeft(road []Road, currentRoadIndex int, currentcarIndex int) bool 
 	// get the previous car from currentlane
 	var prevCar Car
 	prevCarIndex := GetPrevCar(road[currentRoadIndex], currentcarIndex)
+	if prevCarIndex >= roadLength {
+		return false
+	}
 	prevCar = road[currentRoadIndex][prevCarIndex]
 	delta_dAB := prevCarIndex - currentcarIndex
 
 	// get the previous car from the lane in the left direction
-	var prevNeighborCar Car
 	prevNeighborCarIndex := GetPrevCar(road[currentRoadIndex-1], currentcarIndex)
-	prevNeighborCar = road[currentRoadIndex-1][prevNeighborCarIndex]
-	delta_dAE := prevNeighborCarIndex - currentcarIndex
+
+	var delta_dAE int
+	var prevNeighborCarSpeed int
+
+	if prevNeighborCarIndex >= roadLength {
+		prevNeighborCarSpeed = maxSpeed
+		delta_dAE = 1000
+	} else {
+		prevNeighborCarSpeed = road[currentRoadIndex-1][prevNeighborCarIndex].speed
+		delta_dAE = prevNeighborCarIndex - currentcarIndex
+	}
 
 	currentCar := road[currentRoadIndex][currentcarIndex]
 	Dmax_vA := safeSpaceMax[currentCar.speed]
 
-	if delta_dAB < Dmax_vA && currentCar.speed > prevCar.speed && (delta_dAE > Dmax_vA || prevNeighborCar.speed > currentCar.speed) || prevCar.turninglight == -1 && prevCar.kind == 2 {
+	if delta_dAB < Dmax_vA && currentCar.speed > prevCar.speed && (delta_dAE > Dmax_vA || prevNeighborCarSpeed > currentCar.speed) || prevCar.turninglight == -1 && prevCar.kind == 2 {
 		return true
 	}
 
@@ -570,15 +581,23 @@ func LCMforSDVRight(road []Road, currentRoadIndex int, currentcarIndex int) bool
 	delta_dAB := prevCarIndex - currentcarIndex
 
 	// get the previous car from the lane in the left direction
-	var prevNeighborCar Car
 	prevNeighborCarIndex := GetPrevCar(road[currentRoadIndex+1], currentcarIndex)
-	prevNeighborCar = road[currentRoadIndex+1][prevNeighborCarIndex]
-	delta_dAE := prevNeighborCarIndex - currentcarIndex
+
+	var delta_dAE int
+	var prevNeighborCarSpeed int
+
+	if prevNeighborCarIndex >= roadLength {
+		prevNeighborCarSpeed = maxSpeed
+		delta_dAE = 1000
+	} else {
+		prevNeighborCarSpeed = road[currentRoadIndex+1][prevNeighborCarIndex].speed
+		delta_dAE = prevNeighborCarIndex - currentcarIndex
+	}
 
 	currentCar := road[currentRoadIndex][currentcarIndex]
 	Dmax_vA := safeSpaceMax[currentCar.speed]
 
-	if delta_dAB < Dmax_vA && currentCar.speed > prevCar.speed && (delta_dAE > Dmax_vA || prevNeighborCar.speed > currentCar.speed) || prevCar.turninglight == 1 && prevCar.kind == 2 {
+	if delta_dAB < Dmax_vA && currentCar.speed > prevCar.speed && (delta_dAE > Dmax_vA || prevNeighborCarSpeed > currentCar.speed) || prevCar.turninglight == 1 && prevCar.kind == 2 {
 		return true
 	}
 

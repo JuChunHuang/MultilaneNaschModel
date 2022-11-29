@@ -1,6 +1,6 @@
 package main
 
-const roadLength = 500
+const roadLength = 1000
 const laneNum = 5
 const maxSpeed = 10
 const dedicatedLane = 0
