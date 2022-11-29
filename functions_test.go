@@ -144,3 +144,19 @@ func TestGetTrainHead(t *testing.T) {
 	}
 
 }
+
+func SDVchangeLane(t *testing.T) {
+	var a1, a2, a3, a4, a5 Car
+	a1.kind = 0
+	a2.kind = 0
+	a3.kind = 0
+	a4.kind = 0
+	a5.kind = 0
+
+	var b1, b2, b3, b4, b5 Car
+	b1.kind = 0
+	b2.kind = 2
+	b3.kind = 0
+	b4.kind = 0
+	b5.kind = 0
+}

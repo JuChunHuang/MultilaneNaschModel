@@ -26,7 +26,7 @@ func main() {
 	trafficLightTime[1] = 5  // yellow light
 	trafficLightTime[2] = 30 // green light
 	numGens := 1000
-	cellWidth := 20
+	cellWidth := 21
 
 	// timePoints := PlayMultiLaneModel(initialRoad, numGens, trafficLightPos, trafficLightTime)
 	// fmt.Println("finish")
@@ -45,7 +45,7 @@ func main() {
 	imageList := BoardsToImages(timePoints, cellWidth)
 	gifhelper.ImagesToGIF(imageList, "SingleLane")
 
-	trafficLightLane := []int{2, 4}
+	trafficLightLane := []int{0}
 
 	initialMultiRoad := initialMultiRoad(trafficLightLane, trafficLightPos)
 
@@ -61,7 +61,7 @@ func main() {
 		}
 	}
 
-	fmt.Println("Finish timePointsMul simulation!")
+	fmt.Println("Finish multiple lane timePoints simulation!")
 
 	imageListMul := BoardsToImages(timePointsMul, cellWidth)
 	gifhelper.ImagesToGIF(imageListMul, "Multilane")
@@ -103,7 +103,7 @@ func PlayMultiLaneModel(initialRoad MultiRoad, numGens, lightPos int, lightLane,
 				roads[i-1][val][lightPos].kind = 4 // yellow light
 			}
 		}
-		roads[i] = MultiLaneSimulation(roads[i-1])
+		roads[i] = MultiLaneSimulation(roads[i-1], i)
 		// fmt.Println(roads[i])
 	}
 
