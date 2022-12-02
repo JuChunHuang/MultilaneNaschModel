@@ -1,6 +1,6 @@
 package main
 
-const roadLength = 1000
+const roadLength = 200
 const laneNum = 5
 const maxSpeed = 10
 const dedicatedLane = 0
@@ -19,6 +19,21 @@ type Car struct {
 	turninglight int
 	accel        int
 }
+
+// kind = 0  <-------> empty road
+// kind = 1  <-------> NSDV
+// kind = 2  <-------> SDV
+// kind = 3  <-------> red traffic lights
+// kind = 4  <-------> yellow traffic lights
+// kind = 5  <-------> green traffic lights
+// backlight = 0  <-------> remain same speed
+// backlight = -1 <-------> deceleration
+// backlight = 1  <-------> acceleration
+// turninglight = 0  <-------> no turning
+// turninglight = -1 <-------> turning left
+// turninglight = 1  <-------> turning right
+// accel = 0  <-------> no acceleration
+// accel = 1  <-------> acceleration = 1
 
 type Road []Car
 

@@ -654,6 +654,7 @@ func LCSforSDVRight(roads MultiRoad, currentRoadIndex int, currentcarIndex int) 
 	delta_differlnext := currentcarIndex - rightnextcarIndex
 
 	safeDisPrev := safeSpaceMin[roads[currentRoadIndex][currentcarIndex].speed]
+	fmt.Println(roads[rightroadIndex][rightnextcarIndex].speed)
 	safeDisNext := safeSpaceMin[roads[rightroadIndex][rightnextcarIndex].speed]
 
 	currentcar := roads[currentRoadIndex][currentcarIndex]
