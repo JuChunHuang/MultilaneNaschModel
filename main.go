@@ -26,7 +26,7 @@ func main() {
 	trafficLightTime[1] = 5  // yellow light
 	trafficLightTime[2] = 30 // green light
 	numGens := 1000
-	cellWidth := 20
+	cellWidth := 21
 
 	// timePoints := PlayMultiLaneModel(initialRoad, numGens, trafficLightPos, trafficLightTime)
 	// fmt.Println("finish")

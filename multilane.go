@@ -120,9 +120,8 @@ func ChangeSpeed(currentRoad MultiRoad) (MultiRoad, int) {
 					newRoad[curLane][newIndex].kind = kind
 					newRoad[curLane][newIndex].backlight = newLight
 				}
-			} else if kind == 2 {
-
-				if delta_d >= safeSpaceMax[speed] {
+			} else if kind == 2 && (roadLength/2 <= j || prevLight.kind == 5) {
+				if delta_d >= safeSpaceSDVMin[speed] {
 					newSpeed = speed + 1
 					newLight = 1
 					newAccel = 1
@@ -157,23 +156,125 @@ func ChangeSpeed(currentRoad MultiRoad) (MultiRoad, int) {
 					newAccel = currentRoad[curLane][trainHead].accel
 				}
 
+				if newSpeed < 0 {
+					newSpeed = 0
+				} else if newSpeed > 10 {
+					newSpeed = 10
+				}
 				newIndex := j + newSpeed
+
 				if newIndex >= roadLength {
 					carCnt++
-					// } else if newIndex < roadLength && newRoad[curLane][newIndex].kind != 0 {
-					// 	panic("SDV crashes something.")
+				} else if newIndex < roadLength && newRoad[curLane][newIndex].kind != 0 {
+					// panic("SDV crashes something.")
 				} else {
-					if newSpeed < 0 {
-						newSpeed = 0
-					} else if newSpeed > 10 {
-						newSpeed = 10
-					}
 					newRoad[curLane][newIndex].speed = newSpeed
 					newRoad[curLane][newIndex].backlight = newLight
 					newRoad[curLane][newIndex].accel = newAccel
 					newRoad[curLane][newIndex].kind = kind
 				}
+
+			} else if kind == 2 && roadLength/2 > j && (prevLight.kind == 3 || prevLight.kind == 4) {
+				if prevCarIndex > prevLightIndex {
+					delta_d = prevLightIndex - j
+					prevCarIndex = prevLightIndex
+				}
+				if delta_d >= safeSpaceMin[speed] {
+					newSpeed = speed + 1
+					newLight = 1
+					newAccel = 1
+				} else if prevCar.kind == 1 && prevCar.backlight != -1 && delta_d >= safeSpaceMin[speed] {
+					newSpeed = speed + 1
+					newLight = 1
+					newAccel = 1
+				} else if prevCar.kind == 2 && delta_d > GetSDVmindis(j, prevCarIndex, currentRoad[curLane]) {
+					newSpeed = speed + 1
+					newLight = 1
+					newAccel = 1
+				} else if prevCar.kind == 2 && delta_d <= GetSDVmindis(j, prevCarIndex, currentRoad[curLane]) {
+					newSpeed = speed - 1
+					newLight = -1
+					newAccel = 0
+				} else if prevLight.kind >= 3 && deltaDLight <= safeSpaceMin[0] {
+					newSpeed = 0
+					newLight = 0
+					newAccel = 0
+				} else {
+					newLight = 0
+					newAccel = 0
+				}
+
+				if delta_d < safetraffic[speed] {
+					newSpeed = 0
+					newLight = -1
+				}
+
+				newIndex := j + newSpeed
+				if newIndex > roadLength/2 {
+					newSpeed = 0
+				}
+				if newSpeed < 0 {
+					newSpeed = 0
+				} else if newSpeed > 10 {
+					newSpeed = 10
+				}
+
+				newRoad[curLane][newIndex].speed = newSpeed
+				newRoad[curLane][newIndex].backlight = newLight
+				newRoad[curLane][newIndex].accel = newAccel
+				newRoad[curLane][newIndex].kind = kind
+
+				if delta_d >= safeSpaceMin[speed] {
+					newSpeed = speed + 1
+					newLight = 1
+					newAccel = 1
+				} else if prevCar.kind == 1 && prevCar.backlight != -1 && delta_d >= safeSpaceMin[speed] {
+					newSpeed = speed + 1
+					newLight = 1
+					newAccel = 1
+				} else if prevCar.kind == 2 && delta_d > GetSDVmindis(j, prevCarIndex, currentRoad[curLane]) {
+					newSpeed = speed + 1
+					newLight = 1
+					newAccel = 1
+				} else if prevCar.kind == 2 && delta_d <= GetSDVmindis(j, prevCarIndex, currentRoad[curLane]) && prevCar.speed != 0 {
+					newSpeed = speed - 1
+					newLight = -1
+					newAccel = 0
+				} else if prevCar.kind == 2 && delta_d <= GetSDVmindis(j, prevCarIndex, currentRoad[curLane]) && prevCar.speed == 0 {
+					newSpeed = 0
+					newLight = 0
+					newAccel = 0
+
+				} else if prevLight.kind > 3 && deltaDLight <= safeSpaceMin[0] {
+					newSpeed = 0
+					newLight = 0
+					newAccel = 0
+				} else {
+					newLight = 0
+					newAccel = 0
+				}
+
+				if delta_d < safetraffic[speed] {
+					newSpeed = 0
+					newLight = -1
+				}
+
+				newIndex = j + newSpeed
+				if newIndex > roadLength/2 {
+					newSpeed = 0
+				}
+				if newSpeed < 0 {
+					newSpeed = 0
+				} else if newSpeed > 10 {
+					newSpeed = 10
+				}
+
+				newRoad[curLane][newIndex].speed = newSpeed
+				newRoad[curLane][newIndex].backlight = newLight
+				newRoad[curLane][newIndex].accel = newAccel
+				newRoad[curLane][newIndex].kind = kind
 			}
+
 		}
 	}
 
