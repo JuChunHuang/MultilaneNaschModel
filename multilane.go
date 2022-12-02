@@ -7,7 +7,7 @@ import (
 
 func MultiLaneSimulation(currentRoad MultiRoad, i int) MultiRoad {
 	// whether to produce a new car at the beginning of each road
-	if i%2 != 0 {
+	if i%10 != 0 {
 		ProduceMulti(&currentRoad, 0.5)
 	}
 
@@ -311,6 +311,7 @@ func ChangeLane(currentRoad MultiRoad) MultiRoad {
 	for curLane := 0; curLane < laneNum; curLane++ {
 		turninglight = -1
 		for j := 0; j < roadLength; j++ {
+
 			currentCar := currentRoad[curLane][j]
 			kind := currentCar.kind
 			speed := currentCar.speed

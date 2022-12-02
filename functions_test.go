@@ -159,4 +159,5 @@ func SDVchangeLane(t *testing.T) {
 	b3.kind = 0
 	b4.kind = 0
 	b5.kind = 0
+
 }
