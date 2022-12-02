@@ -9,7 +9,6 @@ func BoardsToImages(roads []MultiRoad, cellWidth int) []image.Image {
 	imageList := make([]image.Image, len(roads))
 	for i := range roads {
 		imageList[i] = roads[i].BoardToImage(cellWidth)
-		// break
 	}
 	return imageList
 }
