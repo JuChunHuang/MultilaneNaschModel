@@ -113,6 +113,11 @@ func SingleLaneSimulation(currentRoad Road) Road {
 				newLight = 1
 				newAccel = 1
 			} else if prevCar.kind == 2 && delta_d <= GetSDVmindis(i, prevCarIndex, currentRoad) {
+				if delta_d < safeSpaceSDVMin[0] {
+					newSpeed = 0
+					newLight = 0
+					newAccel = 0
+				}
 				newSpeed = speed - 1
 				newLight = -1
 				newAccel = 0
@@ -171,6 +176,11 @@ func SingleLaneSimulation(currentRoad Road) Road {
 				newLight = 1
 				newAccel = 1
 			} else if prevCar.kind == 2 && delta_d <= GetSDVmindis(i, prevCarIndex, currentRoad) {
+				if delta_d < safeSpaceSDVMin[0] {
+					newSpeed = 0
+					newLight = 0
+					newAccel = 0
+				}
 				newSpeed = speed - 1
 				newLight = -1
 				newAccel = 0
@@ -216,10 +226,20 @@ func SingleLaneSimulation(currentRoad Road) Road {
 				newLight = 1
 				newAccel = 1
 			} else if prevCar.kind == 2 && delta_d <= GetSDVmindis(i, prevCarIndex, currentRoad) && prevCar.speed != 0 {
+				if delta_d < safeSpaceSDVMin[0] {
+					newSpeed = 0
+					newLight = 0
+					newAccel = 0
+				}
 				newSpeed = speed - 1
 				newLight = -1
 				newAccel = 0
 			} else if prevCar.kind == 2 && delta_d <= GetSDVmindis(i, prevCarIndex, currentRoad) && prevCar.speed == 0 {
+				if delta_d < safeSpaceSDVMin[0] {
+					newSpeed = 0
+					newLight = 0
+					newAccel = 0
+				}
 				newSpeed = 0
 				newLight = 0
 				newAccel = 0

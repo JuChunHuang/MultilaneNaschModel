@@ -49,12 +49,12 @@ func (r MultiRoad) BoardToImage(scalingFactor int) image.Image {
 			c.Fill()
 
 			c.SetFillColor(canvas.MakeColor(255, 255, 0))
-			if r[i][j].backlight == -1 {
+			if r[i][j].turninglight == -1 {
 				x1, y1 = (3*j)*scalingFactor/3, 2*i*scalingFactor
 				x2, y2 = (3*j+1)*scalingFactor/3, (2*i+1)*scalingFactor
 				c.ClearRect(x1, y1, x2, y2)
 				c.Fill()
-			} else if r[i][j].backlight == -1 {
+			} else if r[i][j].turninglight == 1 {
 				x1, y1 = (3*j)*scalingFactor/3, (2*i+1)*scalingFactor
 				x2, y2 = (3*j+1)*scalingFactor/3, (2*i+2)*scalingFactor
 				c.ClearRect(x1, y1, x2, y2)
