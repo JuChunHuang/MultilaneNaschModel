@@ -2,6 +2,7 @@ package main
 
 import (
 	"canvas"
+	"fmt"
 	"image"
 )
 
@@ -30,9 +31,19 @@ func (r MultiRoad) BoardToImage(scalingFactor int) image.Image {
 			if r[i][j].kind == 0 {
 				c.SetFillColor(canvas.MakeColor(255, 255, 255))
 			} else if r[i][j].kind == 1 {
-				c.SetFillColor(canvas.MakeColor(244, 114, 208))
+				if r[i][j].turninglight == -1 || r[i][j].turninglight == 1 {
+					fmt.Println("yes")
+					c.SetFillColor(canvas.MakeColor(0, 255, 0))
+				} else {
+					c.SetFillColor(canvas.MakeColor(244, 114, 208))
+				}
 			} else if r[i][j].kind == 2 {
-				c.SetFillColor(canvas.MakeColor(0, 0, 255))
+				if r[i][j].turninglight == -1 || r[i][j].turninglight == 1 {
+					c.SetFillColor(canvas.MakeColor(0, 255, 0))
+					fmt.Println("yes")
+				} else {
+					c.SetFillColor(canvas.MakeColor(0, 0, 255))
+				}
 			} else if r[i][j].kind == 3 {
 				c.SetFillColor(canvas.MakeColor(255, 0, 0)) // red light
 			} else if r[i][j].kind == 4 {
@@ -48,18 +59,18 @@ func (r MultiRoad) BoardToImage(scalingFactor int) image.Image {
 			c.ClearRect(x1, y1, x2, y2)
 			c.Fill()
 
-			c.SetFillColor(canvas.MakeColor(255, 255, 0))
-			if r[i][j].turninglight == -1 {
-				x1, y1 = (3*j)*scalingFactor/3, 2*i*scalingFactor
-				x2, y2 = (3*j+1)*scalingFactor/3, (2*i+1)*scalingFactor
-				c.ClearRect(x1, y1, x2, y2)
-				c.Fill()
-			} else if r[i][j].turninglight == 1 {
-				x1, y1 = (3*j)*scalingFactor/3, (2*i+1)*scalingFactor
-				x2, y2 = (3*j+1)*scalingFactor/3, (2*i+2)*scalingFactor
-				c.ClearRect(x1, y1, x2, y2)
-				c.Fill()
-			}
+			// c.SetFillColor(canvas.MakeColor(0, 255, 0))
+			// if r[i][j].turninglight == -1 {
+			// 	x1, y1 = (3*j)*scalingFactor/3, 2*i*scalingFactor
+			// 	x2, y2 = (3*j+1)*scalingFactor/3, (2*i+1)*scalingFactor
+			// 	c.ClearRect(x1, y1, x2, y2)
+			// 	c.Fill()
+			// } else if r[i][j].turninglight == 1 {
+			// 	x1, y1 = (3*j)*scalingFactor/3, (2*i+1)*scalingFactor
+			// 	x2, y2 = (3*j+1)*scalingFactor/3, (2*i+2)*scalingFactor
+			// 	c.ClearRect(x1, y1, x2, y2)
+			// 	c.Fill()
+			// }
 
 		}
 	}

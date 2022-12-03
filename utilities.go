@@ -2,7 +2,6 @@ package main
 
 import (
 	"math/rand"
-	"time"
 )
 
 func GetPrevCar(currentRoad Road, index int) int {
@@ -63,12 +62,6 @@ func min(k, m int) int {
 	}
 }
 
-func GenRandom(n int) int {
-	r := rand.New(rand.NewSource(time.Now().UnixNano()))
-	rn := r.Intn(n)
-	return rn
-}
-
 // Whether the lane is exist
 func ValidLane(lane int) bool {
 	return (lane >= 0 && lane < laneNum)
@@ -76,8 +69,7 @@ func ValidLane(lane int) bool {
 
 func Produce(currentRoad *Road, kindPossiblity float64) bool {
 	// Determine the kind of next car based on kind possibility
-	r := rand.New(rand.NewSource(time.Now().UnixNano()))
-	p := r.Float64()
+	p := rand.Float64()
 	var kind int
 	var initSpeedBound int
 	if p < kindPossiblity {
