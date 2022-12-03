@@ -160,4 +160,14 @@ func SDVchangeLane(t *testing.T) {
 	b4.kind = 0
 	b5.kind = 0
 
+	var c1, c2, c3, c4, c5 Car
+	c1.kind = 0
+	c2.kind = 0
+	c3.kind = 0
+	c4.kind = 2
+	c5.kind = 0
+
+	b2.speed = 3
+	c5.speed = 1
+
 }

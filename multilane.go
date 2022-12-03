@@ -7,7 +7,7 @@ import (
 
 func MultiLaneSimulation(currentRoad MultiRoad, i int) MultiRoad {
 	// whether to produce a new car at the beginning of each road
-	if i%10 != 0 {
+	if i%2 == 0 {
 		ProduceMulti(&currentRoad, 0.5)
 	}
 
@@ -296,7 +296,6 @@ func ChangeSpeed(currentRoad MultiRoad) (MultiRoad, int) {
 				newRoad[curLane][newIndex].accel = newAccel
 				newRoad[curLane][newIndex].kind = kind
 			}
-
 		}
 	}
 
@@ -311,7 +310,6 @@ func ChangeLane(currentRoad MultiRoad) MultiRoad {
 	for curLane := 0; curLane < laneNum; curLane++ {
 		turninglight = -1
 		for j := 0; j < roadLength; j++ {
-
 			currentCar := currentRoad[curLane][j]
 			kind := currentCar.kind
 			speed := currentCar.speed
@@ -328,85 +326,90 @@ func ChangeLane(currentRoad MultiRoad) MultiRoad {
 			// change lane
 			if turninglight == 0 {
 				// no car in front of currentCar, no need to change lane
-			} else if kind == 1 {
-				// change the turning light of NSDV and change the lane
-				turninglight := ChangeNSDVTurningLight(currentRoad, curLane, j)
-				if turninglight != 0 {
-					probOfTurn = 0
-					aimLane := curLane + turninglight
-					if prevCar.backlight == -1 && safeSpaceMin[speed] <= delta_d &&
-						safeSpaceMax[speed] > delta_d {
-						probOfTurn = cp1
-					} else if prevCar.backlight >= 0 && safeSpaceMin[speed] <= delta_d &&
-						safeSpaceMax[speed] > delta_d {
-						probOfTurn = cp2
-					} else if speed == 0 {
-						probOfTurn = cp3
-					} else {
+			} else {
+				if kind == 1 {
+					// change the turning light of NSDV and change the lane
+					turninglight := ChangeNSDVTurningLight(currentRoad, curLane, j)
+					if turninglight != 0 {
 						probOfTurn = 0
-					}
+						aimLane := curLane + turninglight
+						if prevCar.backlight == -1 && safeSpaceMin[speed] <= delta_d &&
+							safeSpaceMax[speed] > delta_d {
+							probOfTurn = cp1
+						} else if prevCar.backlight >= 0 && safeSpaceMin[speed] <= delta_d &&
+							safeSpaceMax[speed] > delta_d {
+							probOfTurn = cp2
+						} else if speed == 0 {
+							probOfTurn = cp3
+						} else {
+							probOfTurn = 0
+						}
 
-					thresToTurn := rand.Float64()
+						thresToTurn := rand.Float64()
 
-					if currentRoad[aimLane][j].kind != 0 {
-						panic("NSDV crashes during changing lane.")
-					} else {
-						if probOfTurn >= thresToTurn {
-							currentRoad[aimLane][j].kind = kind
-							currentRoad[aimLane][j].speed = speed
-							currentRoad[aimLane][j].turninglight = 0
-							currentRoad[aimLane][j].backlight = currentCar.backlight
+						if currentRoad[aimLane][j].kind != 0 {
+							panic("NSDV crashes during changing lane.")
+						} else {
+							if probOfTurn >= thresToTurn {
+								currentRoad[aimLane][j].kind = kind
+								currentRoad[aimLane][j].speed = speed
+								currentRoad[aimLane][j].turninglight = turninglight
+								currentRoad[aimLane][j].backlight = currentCar.backlight
+								fmt.Println(turninglight)
 
-							currentRoad[curLane][j].kind = 0
-							currentRoad[curLane][j].speed = 0
-							currentRoad[curLane][j].turninglight = 0
-							currentRoad[curLane][j].backlight = 0
+								currentRoad[curLane][j].kind = 0
+								currentRoad[curLane][j].speed = 0
+								currentRoad[curLane][j].turninglight = 0
+								currentRoad[curLane][j].backlight = 0
 
-							fmt.Printf("NSDV changed lane from %v to %v at %v\n", curLane, aimLane, j)
+								fmt.Printf("NSDV changed lane from %v to %v at %v\n", curLane, aimLane, j)
+							}
 						}
 					}
-				}
-			} else if kind == 2 {
-				turninglight := ChangeLaneSDVCondition(currentRoad, curLane, j)
+				} else if kind == 2 {
+					turninglight := ChangeSDVTurningLight(currentRoad, curLane, j)
+					fmt.Println(curLane, turninglight)
 
-				if turninglight == -1 {
-					leftroadIndex := curLane - 1
+					if turninglight == -1 {
+						leftroadIndex := curLane - 1
 
-					if currentRoad[leftroadIndex][j].kind != 0 {
-						panic("SDV crahes during changing lane.")
-					} else {
-						currentRoad[leftroadIndex][j].speed = currentCar.speed
-						currentRoad[leftroadIndex][j].kind = currentCar.kind
-						currentRoad[leftroadIndex][j].backlight = currentCar.backlight
-						currentRoad[leftroadIndex][j].accel = currentCar.accel
-						currentRoad[leftroadIndex][j].turninglight = 0
+						if currentRoad[leftroadIndex][j].kind != 0 {
+							panic("SDV crahes during changing lane.")
+						} else {
+							currentRoad[leftroadIndex][j].speed = currentCar.speed
+							currentRoad[leftroadIndex][j].kind = currentCar.kind
+							currentRoad[leftroadIndex][j].backlight = currentCar.backlight
+							currentRoad[leftroadIndex][j].accel = currentCar.accel
+							currentRoad[leftroadIndex][j].turninglight = turninglight
 
-						currentCar.speed = 0
-						currentCar.kind = 0
-						currentCar.backlight = 0
-						currentCar.accel = 0
-						currentCar.turninglight = 0
-						fmt.Printf("SDV changed lane from %v to %v\n", curLane, leftroadIndex)
-					}
-				} else if turninglight == 1 {
-					rightroadIndex := curLane + 1
+							currentCar.speed = 0
+							currentCar.kind = 0
+							currentCar.backlight = 0
+							currentCar.accel = 0
+							currentCar.turninglight = 0
+							fmt.Printf("SDV changed lane from %v to %v at %v\n", curLane, leftroadIndex, j)
+						}
+					} else if turninglight == 1 {
+						rightroadIndex := curLane + 1
+						// fmt.Println(rightroadIndex)
 
-					if currentRoad[rightroadIndex][j].kind != 0 {
-						panic("SDV crahes during changing lane.")
-					} else {
-						currentRoad[rightroadIndex][j].speed = currentCar.speed
-						currentRoad[rightroadIndex][j].kind = currentCar.kind
-						currentRoad[rightroadIndex][j].backlight = currentCar.backlight
-						currentRoad[rightroadIndex][j].accel = currentCar.accel
-						currentRoad[rightroadIndex][j].turninglight = 0
+						if currentRoad[rightroadIndex][j].kind != 0 {
+							// panic("SDV crahes during changing lane.")
+						} else {
+							currentRoad[rightroadIndex][j].speed = currentCar.speed
+							currentRoad[rightroadIndex][j].kind = currentCar.kind
+							currentRoad[rightroadIndex][j].backlight = currentCar.backlight
+							currentRoad[rightroadIndex][j].accel = currentCar.accel
+							currentRoad[rightroadIndex][j].turninglight = turninglight
 
-						currentCar.speed = 0
-						currentCar.kind = 0
-						currentCar.backlight = 0
-						currentCar.accel = 0
-						currentCar.turninglight = 0
+							currentCar.speed = 0
+							currentCar.kind = 0
+							currentCar.backlight = 0
+							currentCar.accel = 0
+							currentCar.turninglight = 0
 
-						fmt.Printf("SDV changed lane from %v to %v\n", curLane, rightroadIndex)
+							fmt.Printf("SDV changed lane from %v to %v at %v\n", curLane, rightroadIndex, j)
+						}
 					}
 				}
 			}
@@ -474,6 +477,103 @@ func LCSforNSDV(road MultiRoad, curLane, aimLane, curCarIndex int) bool {
 	return res
 }
 
+func LCSforSDV(road MultiRoad, curLane, aimLane, curCarIndex int) bool {
+	t1 := false
+	t2 := false
+	t3 := false
+	speed := road[curLane][curCarIndex].speed
+	curAheadCarIndex := GetPrevCar(road[curLane], curCarIndex)
+	// curNextCarIndex := GetNext(road[curLane], curCarIndex)
+	aimAheadCarIndex := GetPrevCar(road[aimLane], curCarIndex-1)
+	aimNextCarIndex := GetNext(road[aimLane], curCarIndex+1)
+	curAheadDelta_d := curAheadCarIndex - curCarIndex
+	aimAheadDelta_d := aimAheadCarIndex - curCarIndex
+	// curBackDelta_d := curCarIndex - curNextCarIndex
+	aimBackDelta_d := curCarIndex - aimNextCarIndex
+
+	if curAheadCarIndex == 2*roadLength {
+		t1 = true
+	} else if curAheadCarIndex != 2*roadLength {
+		if curAheadDelta_d >= safeSpaceMin[speed] {
+			t1 = true
+		} else {
+			t1 = false
+		}
+
+		if curAheadDelta_d >= (safeSpaceMin[speed] - safeSpaceMin[road[curLane][curAheadCarIndex].speed] + 1 + 2*road[curLane][curAheadCarIndex].speed) {
+			t1 = true
+		} else {
+			t1 = false
+		}
+
+	}
+
+	if aimAheadCarIndex == 2*roadLength {
+		t2 = true
+	} else if aimAheadCarIndex != 2*roadLength {
+		if aimAheadDelta_d >= safeSpaceMin[speed] {
+			t2 = true
+		} else {
+			t2 = false
+		}
+
+		if aimAheadDelta_d >= (safeSpaceMin[speed] - safeSpaceMin[road[aimLane][aimAheadCarIndex].speed] + 1 + 2*road[aimLane][aimAheadCarIndex].speed + 1) {
+			t2 = true
+		} else {
+			t2 = false
+		}
+
+	}
+
+	if aimNextCarIndex == -1 {
+		t3 = true
+	} else if aimNextCarIndex != -1 {
+		if aimBackDelta_d >= safeSpaceMin[road[aimLane][aimNextCarIndex].speed] {
+			t3 = true
+		} else {
+			t3 = false
+		}
+
+		if aimBackDelta_d >= (safeSpaceMin[road[aimLane][aimNextCarIndex].speed] - safeSpaceMin[speed] + 2*speed + 1) {
+			t3 = true
+		} else {
+			t3 = false
+		}
+
+	}
+
+	if (t1 && t2 && t3) == true {
+		return true
+	} else {
+		return false
+	}
+
+}
+func ChangeSDVTurningLight(currentRoad MultiRoad, curLane, curCarIndex int) int {
+	currentCar := currentRoad[curLane][curCarIndex]
+	// kind := currentCar.kind
+	// speed := currentCar.speed
+	turningLight := currentCar.turninglight
+	// curAheadCarIndex := GetPrevCar(currentRoad[curLane], curCarIndex)
+	// curAheadCar := currentRoad[curLane][curAheadCarIndex]
+	// delta_d := curAheadCarIndex - curCarIndex
+	// NSDV situation
+	for aimLane := curLane - 1; aimLane < curLane+2; aimLane++ {
+		if !ValidLane(aimLane) {
+		} else {
+			lcm := LCMforSDV(currentRoad, curLane, aimLane, curCarIndex)
+			lcs := LCSforSDV(currentRoad, curLane, aimLane, curCarIndex)
+
+			if lcm && lcs {
+				turningLight = aimLane - curLane
+			}
+		}
+
+	}
+
+	return turningLight
+}
+
 func LCMforNSDV(road MultiRoad, curLane, aimLane, curCarIndex int) bool {
 	if aimLane >= laneNum {
 		return false
@@ -524,182 +624,33 @@ func LCMforNSDV(road MultiRoad, curLane, aimLane, curCarIndex int) bool {
 
 	return res
 }
+func LCMforSDV(road []Road, currentRoadIndex, aimRoadIndex int, currentCarIndex int) bool {
 
-func LCMforSDVLeft(road []Road, currentRoadIndex int, currentcarIndex int) bool {
-	// if currentlane is the edge of the whole lane
-	edge1 := 0
-	edge2 := len(road) - 1
-	if currentRoadIndex == edge1 || currentRoadIndex == edge2 {
+	speed := road[currentRoadIndex][currentCarIndex].speed
+
+	prevCarIndex := GetPrevCar(road[currentRoadIndex], currentCarIndex)
+	delta := prevCarIndex - currentCarIndex
+
+	prevAimCarIndex := GetPrevCar(road[aimRoadIndex], currentCarIndex)
+	deltaAimCar := prevAimCarIndex - currentCarIndex
+
+	if delta > safeSpaceMax[speed] {
 		return false
 	}
 
-	// get the previous car from currentlane
-	var prevCar Car
-	prevCarIndex := GetPrevCar(road[currentRoadIndex], currentcarIndex)
-	if prevCarIndex >= roadLength {
-		return false
-	}
-	prevCar = road[currentRoadIndex][prevCarIndex]
-	delta_dAB := prevCarIndex - currentcarIndex
-
-	// get the previous car from the lane in the left direction
-	prevNeighborCarIndex := GetPrevCar(road[currentRoadIndex-1], currentcarIndex)
-
-	var delta_dAE int
-	var prevNeighborCarSpeed int
-
-	if prevNeighborCarIndex >= roadLength {
-		prevNeighborCarSpeed = maxSpeed
-		delta_dAE = 1000
+	if road[currentRoadIndex][prevCarIndex].kind == 1 {
+		if (deltaAimCar > safeSpaceMax[speed] || road[aimRoadIndex][prevAimCarIndex].speed >= speed) &&
+			(road[currentRoadIndex][prevCarIndex].speed < speed) {
+			return true
+		} else {
+			return false
+		}
 	} else {
-		prevNeighborCarSpeed = road[currentRoadIndex-1][prevNeighborCarIndex].speed
-		delta_dAE = prevNeighborCarIndex - currentcarIndex
+		if road[currentRoadIndex][prevCarIndex].turninglight == aimRoadIndex-currentRoadIndex {
+			return true
+		} else {
+			return false
+		}
 	}
 
-	currentCar := road[currentRoadIndex][currentcarIndex]
-	Dmax_vA := safeSpaceMax[currentCar.speed]
-
-	if delta_dAB < Dmax_vA && currentCar.speed > prevCar.speed && (delta_dAE > Dmax_vA || prevNeighborCarSpeed > currentCar.speed) || prevCar.turninglight == -1 && prevCar.kind == 2 {
-		return true
-	}
-
-	return false
-
-}
-
-func LCMforSDVRight(road []Road, currentRoadIndex int, currentcarIndex int) bool {
-	// if currentlane is the edge of the whole lane
-	edge1 := 0
-	edge2 := len(road) - 1
-	if currentRoadIndex == edge1 || currentRoadIndex == edge2 {
-		return false
-	}
-
-	// get the previous car from currentlane
-	var prevCar Car
-	prevCarIndex := GetPrevCar(road[currentRoadIndex], currentcarIndex)
-	prevCar = road[currentRoadIndex][prevCarIndex]
-	delta_dAB := prevCarIndex - currentcarIndex
-
-	// get the previous car from the lane in the left direction
-	prevNeighborCarIndex := GetPrevCar(road[currentRoadIndex+1], currentcarIndex)
-
-	var delta_dAE int
-	var prevNeighborCarSpeed int
-
-	if prevNeighborCarIndex >= roadLength {
-		prevNeighborCarSpeed = maxSpeed
-		delta_dAE = 1000
-	} else {
-		prevNeighborCarSpeed = road[currentRoadIndex+1][prevNeighborCarIndex].speed
-		delta_dAE = prevNeighborCarIndex - currentcarIndex
-	}
-
-	currentCar := road[currentRoadIndex][currentcarIndex]
-	Dmax_vA := safeSpaceMax[currentCar.speed]
-
-	if delta_dAB < Dmax_vA && currentCar.speed > prevCar.speed && (delta_dAE > Dmax_vA || prevNeighborCarSpeed > currentCar.speed) || prevCar.turninglight == 1 && prevCar.kind == 2 {
-		return true
-	}
-
-	return false
-
-}
-
-func ChangeLaneSDVCondition(road MultiRoad, currentlane, num int) int {
-	// check if the SDV is already to turn left or right,
-	//  if it is left, return -1 ; if it is right, return 1 ; otherwise return 0
-	if LCMforSDVLeft(road, currentlane, num) == true && LCSforSDVLeft(road, currentlane, num) == true {
-		return -1
-	} else if LCMforSDVRight(road, currentlane, num) == true && LCSforSDVRight(road, currentlane, num) == true {
-		return 1
-	} else {
-		return 0
-	}
-}
-
-func LCSforSDVLeft(roads MultiRoad, currentRoadIndex int, currentcarIndex int) bool {
-	if currentcarIndex == 0 {
-		return false
-	}
-	leftroadIndex := currentRoadIndex - 1
-	leftprevIndex := GetPrevCar(roads[currentRoadIndex], currentcarIndex)
-
-	delta_dsamel := leftprevIndex - currentcarIndex
-	delta_differlprev := GetPrevCar(roads[leftroadIndex], currentcarIndex) - currentcarIndex
-	leftnextcarIndex := GetNext(roads[leftroadIndex], currentcarIndex)
-	delta_differlnext := currentcarIndex - leftnextcarIndex
-
-	safeDisPrev := safeSpaceMin[roads[currentRoadIndex][currentcarIndex].speed]
-	safeDisNext := safeSpaceMin[roads[leftroadIndex][leftnextcarIndex].speed]
-
-	currentcar := roads[currentRoadIndex][currentcarIndex]
-
-	if delta_dsamel > safeDisPrev && delta_differlprev > safeDisPrev && delta_differlnext > safeDisNext && (currentcar.turninglight != -1 || currentcar.kind == 2) {
-		return true
-	}
-	return false
-
-}
-
-func LCSforSDVRight(roads MultiRoad, currentRoadIndex int, currentcarIndex int) bool {
-	if currentcarIndex == 0 {
-		return false
-	}
-	rightroadIndex := currentRoadIndex + 1
-	rightprevIndex := GetPrevCar(roads[currentRoadIndex], currentcarIndex)
-
-	delta_dsamel := rightprevIndex - currentcarIndex
-	delta_differlprev := GetPrevCar(roads[rightroadIndex], currentcarIndex) - currentcarIndex
-	rightnextcarIndex := GetNext(roads[rightroadIndex], currentcarIndex)
-	delta_differlnext := currentcarIndex - rightnextcarIndex
-
-	safeDisPrev := safeSpaceMin[roads[currentRoadIndex][currentcarIndex].speed]
-	safeDisNext := safeSpaceMin[roads[rightroadIndex][rightnextcarIndex].speed]
-
-	currentcar := roads[currentRoadIndex][currentcarIndex]
-
-	if delta_dsamel > safeDisPrev && delta_differlprev > safeDisPrev && delta_differlnext > safeDisNext && (currentcar.turninglight != 1 || currentcar.kind == 2) {
-		return true
-	}
-	return false
-
-}
-
-func CarTurnLeft(roads []Road, currentRoadIndex int, currentcarIndex int) {
-	currentcar := roads[currentRoadIndex][currentcarIndex]
-	leftroadIndex := currentRoadIndex - 1
-	if LCMforSDVLeft(roads, currentRoadIndex, currentcarIndex) == true && LCSforSDVLeft(roads, currentRoadIndex, currentcarIndex) == true {
-		currentcar.turninglight = -1
-
-		roads[leftroadIndex][currentcarIndex].speed = currentcar.speed
-		roads[leftroadIndex][currentcarIndex].kind = currentcar.kind
-		roads[leftroadIndex][currentcarIndex].backlight = currentcar.backlight
-		roads[leftroadIndex][currentcarIndex].accel = currentcar.accel
-
-		currentcar.speed = 0
-		currentcar.kind = 0
-		currentcar.turninglight = 0
-		currentcar.accel = 0
-
-	}
-}
-
-func CarTurnRight(roads []Road, currentRoadIndex int, currentcarIndex int) {
-	currentcar := roads[currentRoadIndex][currentcarIndex]
-	RightroadIndex := currentRoadIndex + 1
-	if LCMforSDVRight(roads, currentRoadIndex, currentcarIndex) == true && LCSforSDVRight(roads, currentRoadIndex, currentcarIndex) == true {
-		currentcar.turninglight = -1
-
-		roads[RightroadIndex][currentcarIndex].speed = currentcar.speed
-		roads[RightroadIndex][currentcarIndex].kind = currentcar.kind
-		roads[RightroadIndex][currentcarIndex].turninglight = currentcar.turninglight
-		roads[RightroadIndex][currentcarIndex].accel = currentcar.accel
-
-		currentcar.speed = 0
-		currentcarIndex = 0
-		currentcarIndex = 0
-		currentcarIndex = 0
-
-	}
 }
