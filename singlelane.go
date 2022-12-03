@@ -5,6 +5,9 @@ import (
 	"math/rand"
 )
 
+// SingleLaneSimulation update the single Road
+// Input: a Road object
+// Output: a Road Object
 func SingleLaneSimulation(currentRoad Road) Road {
 	var prevCar Car
 	var prevCarIndex int
@@ -14,10 +17,13 @@ func SingleLaneSimulation(currentRoad Road) Road {
 	var probOfDecel float64
 	var prevLight Car
 
+	// make a new road
 	newRoad := make(Road, roadLength)
 	carCnt := 0
 
+	//produce cars at the beginning the the road
 	Produce(&currentRoad, 0.5)
+
 	for i := roadLength - 1; i >= 0; i-- {
 		currentCar := currentRoad[i]
 		kind := currentCar.kind

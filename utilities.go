@@ -74,10 +74,12 @@ func ValidLane(lane int) bool {
 	return (lane >= 0 && lane < laneNum)
 }
 
+// Produce generate cars at the first grid according to car type possibility
+// Input: a pointer to a Road object of currentRoad, a float object representing the possibility to produce NSDV
+// Output: a boolean object
 func Produce(currentRoad *Road, kindPossiblity float64) bool {
 	// Determine the kind of next car based on kind possibility
-	r := rand.New(rand.NewSource(time.Now().UnixNano()))
-	p := r.Float64()
+	p := rand.Float64()
 	var kind int
 	var initSpeedBound int
 	if p < kindPossiblity {
