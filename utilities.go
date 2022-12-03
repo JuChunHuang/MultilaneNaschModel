@@ -2,7 +2,6 @@ package main
 
 import (
 	"math/rand"
-	"time"
 )
 
 func GetPrevCar(currentRoad Road, index int) int {
@@ -61,12 +60,6 @@ func min(k, m int) int {
 	} else {
 		return m
 	}
-}
-
-func GenRandom(n int) int {
-	r := rand.New(rand.NewSource(time.Now().UnixNano()))
-	rn := r.Intn(n)
-	return rn
 }
 
 // Whether the lane is exist

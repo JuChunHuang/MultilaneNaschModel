@@ -47,10 +47,8 @@ func main() {
 	gifhelper.ImagesToGIF(imageList, "SingleLane")
 	fmt.Println("Finish drawing single lane model results!")
 
-	// MultiLane ==================================================================
-
 	// set traffic lights position
-	trafficLightLane = []int{0}
+	trafficLightLane = []int{1, 2, 3}
 	trafficLightPos = roadLength / 2
 	trafficLightTime = make([]int, 3)
 	trafficLightTime[0] = 30 // red light
@@ -110,9 +108,9 @@ func PlayMultiLaneModel(initialRoad MultiRoad, numGens, lightPos int, lightLane,
 			if 1 <= t && t <= 30 {
 				roads[i-1][val][lightPos].kind = 3 // red light
 			} else if 30 < t && t <= 60 {
-				roads[i-1][val][lightPos].kind = 5 // green light
+				roads[i-1][val][lightPos].kind = 3 // green light
 			} else {
-				roads[i-1][val][lightPos].kind = 4 // yellow light
+				roads[i-1][val][lightPos].kind = 3 // yellow light
 			}
 		}
 		roads[i] = MultiLaneSimulation(roads[i-1], i)
