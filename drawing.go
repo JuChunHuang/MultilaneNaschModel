@@ -2,7 +2,6 @@ package main
 
 import (
 	"canvas"
-	"fmt"
 	"image"
 )
 
@@ -10,7 +9,6 @@ func BoardsToImages(roads []MultiRoad, cellWidth int) []image.Image {
 	imageList := make([]image.Image, len(roads))
 	for i := range roads {
 		imageList[i] = roads[i].BoardToImage(cellWidth)
-		// break
 	}
 	return imageList
 }
@@ -32,7 +30,6 @@ func (r MultiRoad) BoardToImage(scalingFactor int) image.Image {
 				c.SetFillColor(canvas.MakeColor(255, 255, 255))
 			} else if r[i][j].kind == 1 {
 				if r[i][j].turninglight == -1 || r[i][j].turninglight == 1 {
-					fmt.Println("yes")
 					c.SetFillColor(canvas.MakeColor(0, 255, 0))
 				} else {
 					c.SetFillColor(canvas.MakeColor(244, 114, 208))
@@ -40,7 +37,6 @@ func (r MultiRoad) BoardToImage(scalingFactor int) image.Image {
 			} else if r[i][j].kind == 2 {
 				if r[i][j].turninglight == -1 || r[i][j].turninglight == 1 {
 					c.SetFillColor(canvas.MakeColor(0, 255, 0))
-					fmt.Println("yes")
 				} else {
 					c.SetFillColor(canvas.MakeColor(0, 0, 255))
 				}

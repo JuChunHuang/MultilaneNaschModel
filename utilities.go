@@ -67,6 +67,9 @@ func ValidLane(lane int) bool {
 	return (lane >= 0 && lane < laneNum)
 }
 
+// Produce generate cars at the first grid according to car type possibility
+// Input: a pointer to a Road object of currentRoad, a float object representing the possibility to produce NSDV
+// Output: a boolean object
 func Produce(currentRoad *Road, kindPossiblity float64) bool {
 	// Determine the kind of next car based on kind possibility
 	p := rand.Float64()
@@ -170,6 +173,7 @@ func CheckTrain(road Road, carIndex int) bool {
 	sum = 1 + CheckPreviousTrain(road, carIndex) + CheckNextTrain(road, carIndex)
 
 	if sum >= 3 {
+
 		return true
 	} else {
 		return false
@@ -180,7 +184,6 @@ func CheckPreviousTrain(road Road, carIndex int) int {
 	var sum int
 
 	prevIndex := GetPrevCar(road, carIndex)
-
 	if prevIndex > roadLength {
 		return sum
 	} else {
