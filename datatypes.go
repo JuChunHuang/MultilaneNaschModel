@@ -10,7 +10,7 @@ const p2 = 0.5
 const p3 = 0.2
 const cp1 = 0.8
 const cp2 = 0.5
-const cp3 = 0.1
+const cp3 = 0.7
 
 type Car struct {
 	speed        int
@@ -39,7 +39,7 @@ type Road []Car
 
 type MultiRoad []Road
 
-const k = 2
+const k = 1
 
 var safeSpaceMin = [maxSpeed + 1]int{1 * k, 5 * k, 10 * k, 15 * k, 20 * k, 25 * k, 30 * k, 35 * k, 40 * k, 45 * k, 50 * k}
 var safeSpaceMax = [maxSpeed + 1]int{10 * k, 15 * k, 20 * k, 25 * k, 30 * k, 35 * k, 40 * k, 45 * k, 50 * k, 55 * k, 60 * k}
