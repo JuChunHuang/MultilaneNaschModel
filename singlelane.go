@@ -138,7 +138,7 @@ func SingleLaneSimulation(currentRoad Road) Road {
 
 			trainHead := GetTrainHead(currentRoad, i)
 			if CheckTrain(currentRoad, i) == true && trainHead != i {
-				if delta_d != GetSDVmindis(i, prevCarIndex, currentRoad) {
+				if delta_d > GetSDVmindis(i, prevCarIndex, currentRoad) {
 					panic("not SDV Train")
 				}
 				newSpeed = currentRoad[trainHead].speed

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"math/rand"
 )
 
@@ -76,7 +77,7 @@ func Produce(currentRoad *Road, kindPossiblity float64) bool {
 	var kind int
 	var initSpeedBound int
 	if p < kindPossiblity {
-		kind = 1
+		kind = 2
 	} else {
 		kind = 2
 	}
@@ -171,9 +172,8 @@ func GetTrainHead(road Road, carIndex int) int {
 func CheckTrain(road Road, carIndex int) bool {
 	var sum int
 	sum = 1 + CheckPreviousTrain(road, carIndex) + CheckNextTrain(road, carIndex)
-
 	if sum >= 3 {
-
+		fmt.Println(sum)
 		return true
 	} else {
 		return false
@@ -192,7 +192,7 @@ func CheckPreviousTrain(road Road, carIndex int) int {
 		Dmin := GetSDVmindis(carIndex, prevIndex, road)
 		// only count the previous SDV car into consideration when the distance bewteen
 		// previous SDV and current SDV is equal to SDV min distance
-		if road[prevIndex].kind == 2 && distance == Dmin {
+		if road[prevIndex].kind == 2 && distance <= Dmin {
 			sum += 1 + CheckPreviousTrain(road, prevIndex)
 		} else {
 			return sum
@@ -215,7 +215,7 @@ func CheckNextTrain(road Road, carIndex int) int {
 
 		// only count the next SDV car into consideration when the distance bewteen
 		// next SDV and current SDV is equal to SDV min distance
-		if road[nextIndex].kind == 2 && distance == Dmin {
+		if road[nextIndex].kind == 2 && distance <= Dmin {
 			sum += 1 + CheckNextTrain(road, nextIndex)
 		} else {
 			return sum
