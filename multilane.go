@@ -298,8 +298,9 @@ func ChangeSpeedNSDV(currentRoad, newRoad *MultiRoad, carCnt *int, curLane, curr
 func ChangeLaneNSDV(currentRoad, newRoad *MultiRoad, curLane, currentIndex, prevCarIndex, prevLightIndex int) {
 	var prevCar Car
 	var turningLight int
-	//var probOfTurn float64
-	//probOfTurn = -1
+	var probOfTurn float64
+
+	probOfTurn = -1
 
 	if prevCarIndex >= roadLength {
 		prevCar.kind = 0
@@ -310,24 +311,24 @@ func ChangeLaneNSDV(currentRoad, newRoad *MultiRoad, curLane, currentIndex, prev
 	}
 	currentCar := (*currentRoad)[curLane][currentIndex]
 	speed := currentCar.speed
-	//deltaD := prevCarIndex - currentIndex
+	deltaD := prevCarIndex - currentIndex
 	aimLane := curLane + turningLight
 
-	// if turningLight != 0 {
-	// 	if prevCar.backlight == -1 && safeSpaceMin[speed] <= deltaD &&
-	// 		safeSpaceMax[speed] > deltaD {
-	// 		probOfTurn = cp1
-	// 	} else if prevCar.backlight >= 0 && safeSpaceMin[speed] <= deltaD &&
-	// 		safeSpaceMax[speed] > deltaD {
-	// 		probOfTurn = cp2
-	// 	} else if speed == 0 {
-	// 		probOfTurn = cp3
-	// 	} else {
-	// 		probOfTurn = 0
-	// 	}
-	// }
+	if turningLight != 0 {
+		if prevCar.backlight == -1 && safeSpaceMin[speed] <= deltaD &&
+			safeSpaceMax[speed] > deltaD {
+			probOfTurn = cp1
+		} else if prevCar.backlight >= 0 && safeSpaceMin[speed] <= deltaD &&
+			safeSpaceMax[speed] > deltaD {
+			probOfTurn = cp2
+		} else if speed == 0 {
+			probOfTurn = cp3
+		} else {
+			probOfTurn = 0
+		}
+	}
 
-	//thresToTurn := rand.Float64()
+	thresToTurn := rand.Float64()
 
 	if (*newRoad)[aimLane][currentIndex].kind != 0 {
 		//panic("NSDV crashes during changing lane.")
@@ -335,7 +336,7 @@ func ChangeLaneNSDV(currentRoad, newRoad *MultiRoad, curLane, currentIndex, prev
 		(*newRoad)[curLane][currentIndex].speed = speed
 		(*newRoad)[curLane][currentIndex].turninglight = 0
 		(*newRoad)[curLane][currentIndex].backlight = currentCar.backlight
-	} else {
+	} else if thresToTurn <= probOfTurn {
 		(*newRoad)[aimLane][currentIndex].kind = currentCar.kind
 		(*newRoad)[aimLane][currentIndex].speed = speed
 		(*newRoad)[aimLane][currentIndex].turninglight = turningLight
@@ -344,6 +345,12 @@ func ChangeLaneNSDV(currentRoad, newRoad *MultiRoad, curLane, currentIndex, prev
 		if turningLight != 0 {
 			fmt.Printf("NSDV changed lane from %v to %v at %v\n", curLane, aimLane, currentIndex)
 		}
+	} else {
+		(*newRoad)[curLane][currentIndex].kind = currentCar.kind
+		(*newRoad)[curLane][currentIndex].speed = speed
+		(*newRoad)[curLane][currentIndex].turninglight = 0
+		(*newRoad)[curLane][currentIndex].backlight = currentCar.backlight
+
 	}
 }
 
