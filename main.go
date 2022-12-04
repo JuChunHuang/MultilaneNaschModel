@@ -18,34 +18,34 @@ func main() {
 	// drawing settings
 	cellWidth = 21
 
-	// SingleLane ==============================================================
+	// // SingleLane ==============================================================
 
-	// set traffic lights position and time
-	trafficLightPos = roadLength / 2
-	trafficLightTime = make([]int, 3)
-	trafficLightTime[0] = 30 // red light
-	trafficLightTime[1] = 5  // yellow light
-	trafficLightTime[2] = 30 // green light
+	// // set traffic lights position and time
+	// trafficLightPos = roadLength / 2
+	// trafficLightTime = make([]int, 3)
+	// trafficLightTime[0] = 30 // red light
+	// trafficLightTime[1] = 5  // yellow light
+	// trafficLightTime[2] = 30 // green light
 
-	// initialize single lane
-	initialSingleRoad := initialSingleLane(trafficLightPos)
+	// // initialize single lane
+	// initialSingleRoad := initialSingleLane(trafficLightPos)
 
-	// play NaschModel
-	timePointsSingle := PlaySingleLaneModel(initialSingleRoad, numGens, trafficLightPos, trafficLightTime)
-	fmt.Println("Finish running single lane model!")
+	// // play NaschModel
+	// timePointsSingle := PlaySingleLaneModel(initialSingleRoad, numGens, trafficLightPos, trafficLightTime)
+	// fmt.Println("Finish running single lane model!")
 
-	// converting results from playing single lane model to MultiRoad type
-	var timePoints []MultiRoad
-	timePoints = make([]MultiRoad, numGens+1)
-	for i := range timePoints {
-		timePoints[i] = make(MultiRoad, 1)
-		timePoints[i][0] = timePointsSingle[i]
-	}
+	// // converting results from playing single lane model to MultiRoad type
+	// var timePoints []MultiRoad
+	// timePoints = make([]MultiRoad, numGens+1)
+	// for i := range timePoints {
+	// 	timePoints[i] = make(MultiRoad, 1)
+	// 	timePoints[i][0] = timePointsSingle[i]
+	// }
 
-	// generae GIF for singlelane results
-	imageList := BoardsToImages(timePoints, cellWidth)
-	gifhelper.ImagesToGIF(imageList, "SingleLane")
-	fmt.Println("Finish drawing single lane model results!")
+	// // generae GIF for singlelane results
+	// imageList := BoardsToImages(timePoints, cellWidth)
+	// gifhelper.ImagesToGIF(imageList, "SingleLane")
+	// fmt.Println("Finish drawing single lane model results!")
 
 	// set traffic lights position
 	trafficLightLane = []int{1, 2, 3}
