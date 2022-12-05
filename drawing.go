@@ -2,6 +2,7 @@ package main
 
 import (
 	"canvas"
+	"fmt"
 	"image"
 )
 
@@ -73,4 +74,105 @@ func (r MultiRoad) BoardToImage(scalingFactor int) image.Image {
 
 	return c.GetImage()
 
+}
+
+func DrawBoardSingle(t []MultiRoad, numGens int, filename string) {
+	c := canvas.CreateNewCanvas(roadLength, numGens+1)
+	c.SetLineWidth(1)
+
+	for i := 0; i < numGens+1; i++ {
+		for k := 0; k < laneNum; k++ {
+			for j := 0; j < roadLength; j++ {
+				if t[i][0][j].kind == 0 {
+					c.SetFillColor(canvas.MakeColor(255, 255, 255))
+					drawSquare(c, j, i)
+				} else if t[i][0][j].kind == 1 {
+					if t[i][0][j].turninglight == -1 || t[i][0][j].turninglight == 1 {
+						c.SetFillColor(canvas.MakeColor(0, 255, 0))
+						drawSquare(c, j, i)
+					} else {
+						c.SetFillColor(canvas.MakeColor(244, 114, 208))
+						drawSquare(c, j, i)
+					}
+				} else if t[i][0][j].kind == 2 {
+					if t[i][0][j].turninglight == -1 || t[i][0][j].turninglight == 1 {
+						c.SetFillColor(canvas.MakeColor(0, 255, 0))
+						drawSquare(c, j, i)
+					} else {
+						c.SetFillColor(canvas.MakeColor(0, 0, 255))
+						drawSquare(c, j, i)
+					}
+				} else if t[i][0][j].kind == 3 {
+					c.SetFillColor(canvas.MakeColor(255, 0, 0)) // red light
+					drawSquare(c, j, i)
+				} else if t[i][0][j].kind == 4 {
+					c.SetFillColor(canvas.MakeColor(255, 255, 0)) // yellow light
+					drawSquare(c, j, i)
+				} else if t[i][0][j].kind == 5 {
+					c.SetFillColor(canvas.MakeColor(0, 255, 0)) // green light
+					drawSquare(c, j, i)
+				}
+			}
+
+		}
+	}
+	c.SaveToPNG(filename)
+}
+
+func DrawBoardMulti(t []MultiRoad, numGens int, filename string) {
+	c := canvas.CreateNewCanvas(roadLength, (numGens+1)*laneNum)
+	c.SetLineWidth(1)
+
+	for i := 0; i < numGens+1; i++ {
+		for k := 0; k < laneNum; k++ {
+			fmt.Println(k)
+			for j := 0; j < roadLength; j++ {
+				if t[i][k][j].kind == 0 {
+					c.SetFillColor(canvas.MakeColor(255, 255, 255))
+					drawSquare(c, j, i*k)
+				} else if t[i][k][j].kind == 1 {
+					if t[i][k][j].turninglight == -1 || t[i][k][j].turninglight == 1 {
+						c.SetFillColor(canvas.MakeColor(0, 255, 0))
+						drawSquare(c, j, i*k)
+					} else {
+						c.SetFillColor(canvas.MakeColor(244, 114, 208))
+						drawSquare(c, j, i*k)
+					}
+				} else if t[i][k][j].kind == 2 {
+					if t[i][k][j].turninglight == -1 || t[i][k][j].turninglight == 1 {
+						c.SetFillColor(canvas.MakeColor(0, 255, 0))
+						drawSquare(c, j, i*k)
+					} else {
+						c.SetFillColor(canvas.MakeColor(0, 0, 255))
+						drawSquare(c, j, i*k)
+					}
+				} else if t[i][k][j].kind == 3 {
+					c.SetFillColor(canvas.MakeColor(255, 0, 0)) // red light
+					drawSquare(c, j, i*k)
+				} else if t[i][k][j].kind == 4 {
+					c.SetFillColor(canvas.MakeColor(255, 255, 0)) // yellow light
+					drawSquare(c, j, i*k)
+				} else if t[i][k][j].kind == 5 {
+					c.SetFillColor(canvas.MakeColor(0, 255, 0)) // green light
+					drawSquare(c, j, i*k)
+				}
+			}
+
+		}
+	}
+	c.SaveToPNG(filename)
+}
+
+func DrawPoint(a canvas.Canvas, r, c int) {
+	a.ClearRect(r, c, r+1, c+1)
+}
+func drawSquare(a canvas.Canvas, r, c int) {
+	x1, y1 := float64(r), float64(c)
+	x2, y2 := float64(r+1), float64(c+1)
+	a.MoveTo(x1, y1)
+	a.LineTo(x1, y2)
+	a.LineTo(x2, y2)
+	a.LineTo(x2, y1)
+	a.LineTo(x1, y1)
+	a.Fill()
 }

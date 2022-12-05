@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"math/rand"
 )
 
@@ -98,7 +97,7 @@ func SingleLaneSimulation(currentRoad Road) Road {
 			if newIndex >= roadLength {
 				carCnt++
 			} else if newIndex < roadLength && newRoad[newIndex].kind != 0 {
-				fmt.Println("NSDV crashes something", newIndex, newRoad[newIndex].kind)
+				// fmt.Println("NSDV crashes something.", newIndex, newRoad[newIndex].kind)
 				// panic("NSDV crashes something.")
 			} else {
 				newRoad[newIndex].speed = newSpeed
@@ -156,7 +155,7 @@ func SingleLaneSimulation(currentRoad Road) Road {
 			if newIndex >= roadLength {
 				carCnt++
 			} else if newIndex < roadLength && newRoad[newIndex].kind != 0 {
-				// panic("SDV crashes something.")
+				// fmt.Println("SDV crashes something.", newIndex, newRoad[newIndex].kind)
 			} else {
 				newRoad[newIndex].speed = newSpeed
 				newRoad[newIndex].backlight = newLight
@@ -182,7 +181,7 @@ func SingleLaneSimulation(currentRoad Road) Road {
 				newLight = 1
 				newAccel = 1
 			} else if prevCar.kind == 2 && delta_d <= GetSDVmindis(i, prevCarIndex, currentRoad) {
-				if delta_d < safeSpaceSDVMin[0] {
+				if delta_d <= safeSpaceSDVMin[0] {
 					newSpeed = 0
 					newLight = 0
 					newAccel = 0
@@ -199,7 +198,7 @@ func SingleLaneSimulation(currentRoad Road) Road {
 				newAccel = 0
 			}
 
-			if delta_d < safetraffic[speed] {
+			if delta_d <= safetraffic[speed] {
 				newSpeed = 0
 				newLight = -1
 			}
