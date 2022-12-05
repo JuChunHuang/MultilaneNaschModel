@@ -44,11 +44,12 @@ func main() {
 
 	//generate SingleRoad pattern
 	DrawBoardSingle(timePoints, numGens, "SingleRoadPattern.png")
+	fmt.Println("Finish running single lane pattern!")
 
 	// generae GIF for singlelane results
 	imageList := BoardsToImages(timePoints, cellWidth)
 	gifhelper.ImagesToGIF(imageList, "SingleLane")
-	fmt.Println("Finish drawing single lane model results.")
+	fmt.Println("Finish drawing single lane model results!")
 
 	// set traffic lights position
 	trafficLightLane = []int{1, 2, 3}
@@ -65,7 +66,8 @@ func main() {
 	timePointsMulti := PlayMultiLaneModel(initialMultiRoad, numGens, trafficLightPos, trafficLightLane, trafficLightTime)
 	fmt.Println("Finish running multilane model!")
 
-	// DrawBoardMulti(timePoints, numGens, "MultiRoadPattern.png")
+	// DrawBoardMulti(timePointsMulti, numGens, "MultiRoadPattern.png")
+	// fmt.Println("Finish running multilane pattern!")
 
 	// generae GIF for multilane results
 	imageListMul := BoardsToImages(timePointsMulti, cellWidth)

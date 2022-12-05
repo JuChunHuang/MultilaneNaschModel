@@ -2,7 +2,6 @@ package main
 
 import (
 	"canvas"
-	"fmt"
 	"image"
 )
 
@@ -125,7 +124,6 @@ func DrawBoardMulti(t []MultiRoad, numGens int, filename string) {
 
 	for i := 0; i < numGens+1; i++ {
 		for k := 0; k < laneNum; k++ {
-			fmt.Println(k)
 			for j := 0; j < roadLength; j++ {
 				if t[i][k][j].kind == 0 {
 					c.SetFillColor(canvas.MakeColor(255, 255, 255))
@@ -157,7 +155,6 @@ func DrawBoardMulti(t []MultiRoad, numGens int, filename string) {
 					drawSquare(c, j, i*k)
 				}
 			}
-
 		}
 	}
 	c.SaveToPNG(filename)
