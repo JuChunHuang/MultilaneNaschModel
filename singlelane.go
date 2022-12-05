@@ -89,8 +89,8 @@ func SingleLaneSimulation(currentRoad Road) Road {
 
 			if newSpeed < 0 {
 				newSpeed = 0
-			} else if newSpeed > 10 {
-				newSpeed = 10
+			} else if newSpeed > maxSpeed {
+				newSpeed = maxSpeed
 			}
 
 			newIndex := i + newSpeed
@@ -147,8 +147,8 @@ func SingleLaneSimulation(currentRoad Road) Road {
 
 			if newSpeed < 0 {
 				newSpeed = 0
-			} else if newSpeed > 10 {
-				newSpeed = 10
+			} else if newSpeed > maxSpeed {
+				newSpeed = maxSpeed
 			}
 			newIndex := i + newSpeed
 
@@ -209,8 +209,8 @@ func SingleLaneSimulation(currentRoad Road) Road {
 			}
 			if newSpeed < 0 {
 				newSpeed = 0
-			} else if newSpeed > 10 {
-				newSpeed = 10
+			} else if newSpeed > maxSpeed {
+				newSpeed = maxSpeed
 			}
 
 			newRoad[newIndex].speed = newSpeed
