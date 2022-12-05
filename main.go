@@ -27,7 +27,7 @@ func main() {
 	trafficLightTime[1] = 5  // yellow light
 	trafficLightTime[2] = 30 // green light
 
-	// initialize single lane
+	// initialize single-lane
 	initialSingleRoad := initialSingleLane(trafficLightPos)
 
 	// play NaschModel
@@ -53,7 +53,8 @@ func main() {
 
 	// set traffic lights position
 	trafficLightLane = []int{1, 2, 3}
-	trafficLightPos = roadLength / 2
+	// trafficLightPos = roadLength / 2
+	trafficLightPos = 0
 	trafficLightTime = make([]int, 3)
 	trafficLightTime[0] = 30 // red light
 	trafficLightTime[1] = 5  // yellow light
@@ -108,20 +109,26 @@ func PlayMultiLaneModel(initialRoad MultiRoad, numGens, lightPos int, lightLane,
 	roads[0] = initialRoad
 	oneRound := trafficLightTime[0] + trafficLightTime[1] + trafficLightTime[2]
 
-	for i := 1; i <= numGens; i++ {
+	if lightPos > 0 {
 		//Set traffic light status for each generation
-		t := i % oneRound
-		for _, val := range lightLane {
-			if 1 <= t && t <= 30 {
-				roads[i-1][val][lightPos].kind = 3 // red light
-			} else if 30 < t && t <= 60 {
-				roads[i-1][val][lightPos].kind = 5 // green light
-			} else {
-				roads[i-1][val][lightPos].kind = 4 // yellow light
+		for i := 1; i <= numGens; i++ {
+			t := i % oneRound
+			for _, val := range lightLane {
+				if 1 <= t && t <= 30 {
+					roads[i-1][val][lightPos].kind = 3 // red light
+				} else if 30 < t && t <= 60 {
+					roads[i-1][val][lightPos].kind = 5 // green light
+				} else {
+					roads[i-1][val][lightPos].kind = 4 // yellow light
+				}
 			}
-		}
 
-		roads[i] = MultiLaneSimulation(roads[i-1], i)
+			roads[i] = MultiLaneSimulation(roads[i-1], i)
+		}
+	} else {
+		for i := 1; i <= numGens; i++ {
+			roads[i] = MultiLaneSimulation(roads[i-1], i)
+		}
 	}
 
 	return roads
