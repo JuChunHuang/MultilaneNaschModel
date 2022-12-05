@@ -63,7 +63,7 @@ func min(k, m int) int {
 }
 
 // Whether the lane is exist
-func ValidLane(lane int) bool {
+func ValidLane(lane, laneNum int) bool {
 	return (lane >= 0 && lane < laneNum)
 }
 

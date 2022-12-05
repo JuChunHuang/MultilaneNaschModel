@@ -1,29 +1,24 @@
 package main
 
 import (
-	"fmt"
 	"math/rand"
 )
 
-func MultiLaneSimulation(currentRoad MultiRoad, i int) MultiRoad {
+func MultiLaneSimulation(currentRoad MultiRoad, i, laneNum int, nsdvPercentage float64) (MultiRoad, int) {
 	// whether to produce a new car at the beginning of each road
 	// if i%2 == 0 {
 	// 	ProduceMulti(&currentRoad, 0.5)
 	// }
-	ProduceMulti(&currentRoad, 0.5)
+	ProduceMulti(&currentRoad, nsdvPercentage)
 	// return a MultiRoad that all cars have been determined changing lane or not
-	currentRoad = ChangeLane(&currentRoad)
+	currentRoad = ChangeLane(&currentRoad, laneNum)
 	// return a MultiRoad that all cars move to their new index based on newspeed
-	newRoad, carCnt := ChangeSpeed(currentRoad)
+	newRoad, carCnt := ChangeSpeed(currentRoad, laneNum)
 
-	if carCnt != 0 {
-		//fmt.Println("CarCnt:", carCnt)
-	}
-
-	return newRoad
+	return newRoad, carCnt
 }
 
-func ChangeSpeed(currentRoad MultiRoad) (MultiRoad, int) {
+func ChangeSpeed(currentRoad MultiRoad, laneNum int) (MultiRoad, int) {
 	var carCnt int
 	var kind int
 	var prevCarIndex int
@@ -146,7 +141,7 @@ func ChangeSpeedSDV(currentRoad, newRoad *MultiRoad, carCnt *int, curLane, curre
 		if newIndex >= roadLength {
 			(*carCnt)++
 		} else if newIndex < roadLength && (*newRoad)[curLane][newIndex].kind != 0 {
-			fmt.Println("SDV crashes something.", newIndex)
+			// fmt.Println("SDV crashes something.", newIndex)
 		} else {
 			(*newRoad)[curLane][newIndex].speed = newSpeed
 			(*newRoad)[curLane][newIndex].backlight = newLight
@@ -222,7 +217,7 @@ func ChangeSpeedSDV(currentRoad, newRoad *MultiRoad, carCnt *int, curLane, curre
 		if newIndex >= roadLength {
 			(*carCnt)++
 		} else if newIndex < roadLength && (*newRoad)[curLane][newIndex].kind != 0 {
-			fmt.Println("SDV crashes something.", newIndex)
+			// fmt.Println("SDV crashes something.", newIndex)
 		} else {
 			(*newRoad)[curLane][newIndex].speed = newSpeed
 			(*newRoad)[curLane][newIndex].backlight = newLight
@@ -293,7 +288,7 @@ func ChangeSpeedSDV(currentRoad, newRoad *MultiRoad, carCnt *int, curLane, curre
 		if newIndex >= roadLength {
 			(*carCnt)++
 		} else if newIndex < roadLength && (*newRoad)[curLane][newIndex].kind != 0 {
-			fmt.Println("SDV crashes something.", newIndex)
+			// fmt.Println("SDV crashes something.", newIndex)
 		} else {
 			(*newRoad)[curLane][newIndex].speed = newSpeed
 			(*newRoad)[curLane][newIndex].backlight = newLight
@@ -386,7 +381,7 @@ func ChangeSpeedNSDV(currentRoad, newRoad *MultiRoad, carCnt *int, curLane, curr
 	if newIndex >= roadLength {
 		(*carCnt)++
 	} else if newIndex < roadLength && (*newRoad)[curLane][newIndex].kind != 0 {
-		fmt.Println("NSDV crashes something.", newIndex)
+		// fmt.Println("NSDV crashes something.", newIndex)
 	} else {
 		(*newRoad)[curLane][newIndex].speed = newSpeed
 		(*newRoad)[curLane][newIndex].kind = currentCar.kind
@@ -395,7 +390,7 @@ func ChangeSpeedNSDV(currentRoad, newRoad *MultiRoad, carCnt *int, curLane, curr
 	}
 }
 
-func ChangeLaneNSDV(currentRoad, newRoad *MultiRoad, curLane, currentIndex, prevCarIndex, prevLightIndex int) {
+func ChangeLaneNSDV(currentRoad, newRoad *MultiRoad, curLane, currentIndex, prevCarIndex, prevLightIndex, laneNum int) {
 	var prevCar Car
 	var turningLight int
 	var probOfTurn float64
@@ -407,7 +402,7 @@ func ChangeLaneNSDV(currentRoad, newRoad *MultiRoad, curLane, currentIndex, prev
 		turningLight = 0
 	} else {
 		prevCar = (*currentRoad)[curLane][prevCarIndex]
-		turningLight = ChangeNSDVTurningLight(currentRoad, curLane, currentIndex)
+		turningLight = ChangeNSDVTurningLight(currentRoad, curLane, currentIndex, laneNum)
 	}
 	currentCar := (*currentRoad)[curLane][currentIndex]
 	speed := currentCar.speed
@@ -454,7 +449,7 @@ func ChangeLaneNSDV(currentRoad, newRoad *MultiRoad, curLane, currentIndex, prev
 	}
 }
 
-func ChangeLane(currentRoad *MultiRoad) MultiRoad {
+func ChangeLane(currentRoad *MultiRoad, laneNum int) MultiRoad {
 	var newRoad MultiRoad
 	var kind int
 	var prevCarIndex int
@@ -472,9 +467,9 @@ func ChangeLane(currentRoad *MultiRoad) MultiRoad {
 			prevLightIndex = GetPrevLight((*currentRoad)[curLane], j)
 			kind = (*currentRoad)[curLane][j].kind
 			if kind == 1 {
-				ChangeLaneNSDV(currentRoad, &newRoad, curLane, j, prevCarIndex, prevLightIndex)
+				ChangeLaneNSDV(currentRoad, &newRoad, curLane, j, prevCarIndex, prevLightIndex, laneNum)
 			} else if kind == 2 {
-				ChangeLaneSDV(currentRoad, &newRoad, curLane, j, prevCarIndex, prevLightIndex)
+				ChangeLaneSDV(currentRoad, &newRoad, curLane, j, prevCarIndex, prevLightIndex, laneNum)
 			} else if kind > 2 {
 				newRoad[curLane][j] = (*currentRoad)[curLane][j]
 			}
@@ -484,25 +479,25 @@ func ChangeLane(currentRoad *MultiRoad) MultiRoad {
 	return newRoad
 }
 
-func ChangeNSDVTurningLight(currentRoad *MultiRoad, curLane, curCarIndex int) int {
+func ChangeNSDVTurningLight(currentRoad *MultiRoad, curLane, curCarIndex, laneNum int) int {
 	var aimLane int
 	var lcm, lcs, leftLane, rightLane bool
 	leftLane = false
 	rightLane = false
 	lanePreference := 0.5
 
-	if ValidLane(curLane - 1) {
+	if ValidLane(curLane-1, laneNum) {
 		aimLane = curLane - 1
-		lcm = LCMforNSDV(currentRoad, curLane, aimLane, curCarIndex)
+		lcm = LCMforNSDV(currentRoad, curLane, aimLane, curCarIndex, laneNum)
 		lcs = LCSforNSDV(currentRoad, curLane, aimLane, curCarIndex)
 		if lcm && lcs {
 			leftLane = true
 		}
 	}
 
-	if ValidLane(curLane + 1) {
+	if ValidLane(curLane+1, laneNum) {
 		aimLane = curLane + 1
-		lcm = LCMforNSDV(currentRoad, curLane, aimLane, curCarIndex)
+		lcm = LCMforNSDV(currentRoad, curLane, aimLane, curCarIndex, laneNum)
 		lcs = LCSforNSDV(currentRoad, curLane, aimLane, curCarIndex)
 		if lcm && lcs {
 			rightLane = true
@@ -512,7 +507,7 @@ func ChangeNSDVTurningLight(currentRoad *MultiRoad, curLane, curCarIndex int) in
 	return DecisionLaneChange(leftLane, rightLane, lanePreference)
 }
 
-func ChangeLaneSDV(currentRoad, newRoad *MultiRoad, curLane, currentIndex, prevCarIndex, prevLightIndex int) {
+func ChangeLaneSDV(currentRoad, newRoad *MultiRoad, curLane, currentIndex, prevCarIndex, prevLightIndex, laneNum int) {
 	var prevCar Car
 	var turningLight int
 
@@ -521,7 +516,7 @@ func ChangeLaneSDV(currentRoad, newRoad *MultiRoad, curLane, currentIndex, prevC
 		turningLight = 0
 	} else {
 		prevCar = (*currentRoad)[curLane][prevCarIndex]
-		turningLight = ChangeSDVTurningLight(currentRoad, curLane, currentIndex)
+		turningLight = ChangeSDVTurningLight(currentRoad, curLane, currentIndex, laneNum)
 	}
 	currentCar := (*currentRoad)[curLane][currentIndex]
 	speed := currentCar.speed
@@ -681,14 +676,14 @@ func LCSforSDV(road *MultiRoad, curLane, aimLane, curCarIndex int) bool {
 	}
 
 }
-func ChangeSDVTurningLight(currentRoad *MultiRoad, curLane, curCarIndex int) int {
+func ChangeSDVTurningLight(currentRoad *MultiRoad, curLane, curCarIndex, laneNum int) int {
 	var aimLane int
 	var lcm, lcs, leftLane, rightLane bool
 	leftLane = false
 	rightLane = false
 	lanePreference := 0.5
 
-	if ValidLane(curLane - 1) {
+	if ValidLane(curLane-1, laneNum) {
 		aimLane = curLane - 1
 		lcm = LCMforSDV(currentRoad, curLane, aimLane, curCarIndex)
 		lcs = LCSforSDV(currentRoad, curLane, aimLane, curCarIndex)
@@ -697,7 +692,7 @@ func ChangeSDVTurningLight(currentRoad *MultiRoad, curLane, curCarIndex int) int
 		}
 	}
 
-	if ValidLane(curLane + 1) {
+	if ValidLane(curLane+1, laneNum) {
 		aimLane = curLane + 1
 		lcm = LCMforSDV(currentRoad, curLane, aimLane, curCarIndex)
 		lcs = LCSforSDV(currentRoad, curLane, aimLane, curCarIndex)
@@ -709,7 +704,7 @@ func ChangeSDVTurningLight(currentRoad *MultiRoad, curLane, curCarIndex int) int
 	return DecisionLaneChange(leftLane, rightLane, lanePreference)
 }
 
-func LCMforNSDV(road *MultiRoad, curLane, aimLane, curCarIndex int) bool {
+func LCMforNSDV(road *MultiRoad, curLane, aimLane, curCarIndex, laneNum int) bool {
 	var curAheadDelta_d int
 	var aimAheadDelta_d int
 	var curAheadSpeed int

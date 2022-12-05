@@ -9,7 +9,7 @@ func initialSingleLane(trafficLightPos int) Road {
 	return initialRoad
 }
 
-func initialMultiRoad(trafficLightLane []int, trafficLightPos int) MultiRoad {
+func initialMultiRoad(trafficLightLane []int, trafficLightPos, laneNum int) MultiRoad {
 	initialRoad := make(MultiRoad, laneNum)
 
 	//generate laneNum number of initial SingleRoad

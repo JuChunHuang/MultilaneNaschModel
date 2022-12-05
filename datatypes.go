@@ -1,16 +1,14 @@
 package main
 
 const roadLength = 200
-const laneNum = 5
 const maxSpeed = 10
-const dedicatedLane = 0
 
-const p1 = 0.94
+const p1 = 0.8
 const p2 = 0.5
 const p3 = 0.2
 const cp1 = 0.8
-const cp2 = 0.5
-const cp3 = 0.7
+const cp2 = 0.4
+const cp3 = 0.1
 
 type Car struct {
 	speed        int

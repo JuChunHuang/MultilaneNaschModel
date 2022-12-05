@@ -13,7 +13,7 @@ func main() {
 	var trafficLightLane []int
 
 	// GIF generation settings
-	numGens = 1000
+	numGens = 2400
 
 	// drawing settings
 	cellWidth = 21
@@ -51,22 +51,29 @@ func main() {
 	gifhelper.ImagesToGIF(imageList, "SingleLane")
 	fmt.Println("Finish drawing single lane model results!")
 
+	// MultiLane ==============================================================
+
 	// set traffic lights position
 	trafficLightLane = []int{1, 2, 3}
-	// trafficLightPos = roadLength / 2
 	trafficLightPos = 0
 	trafficLightTime = make([]int, 3)
 	trafficLightTime[0] = 30 // red light
 	trafficLightTime[1] = 5  // yellow light
 	trafficLightTime[2] = 30 // green light
 
+	// set SDVs percentage
+	sdvPercentage := 0.0
+	nsdvPercentage := 1.0 - sdvPercentage
+
+	// set lane number
+	laneNum := 5
+
 	// initialize multiple roads
-	initialMultiRoad := initialMultiRoad(trafficLightLane, trafficLightPos)
+	initialMultiRoad := initialMultiRoad(trafficLightLane, trafficLightPos, laneNum)
 
 	// play NaschModel
-	timePointsMulti := PlayMultiLaneModel(initialMultiRoad, numGens, trafficLightPos, trafficLightLane, trafficLightTime)
+	timePointsMulti, totalCnt := PlayMultiLaneModel(initialMultiRoad, numGens, trafficLightPos, laneNum, trafficLightLane, trafficLightTime, nsdvPercentage)
 	fmt.Println("Finish running multilane model!")
-
 	// DrawBoardMulti(timePointsMulti, numGens, "MultiRoadPattern.png")
 	// fmt.Println("Finish running multilane pattern!")
 
@@ -74,6 +81,8 @@ func main() {
 	imageListMul := BoardsToImages(timePointsMulti, cellWidth)
 	gifhelper.ImagesToGIF(imageListMul, "Multilane")
 	fmt.Println("Finish drawing multi lane model results!")
+	fmt.Println(totalCnt)
+
 }
 
 // PlaySingleLaneModel takes the initial road, run Nasch Model for numGens times and return the results
@@ -104,10 +113,12 @@ func PlaySingleLaneModel(initialRoad Road, numGens, lightPos int, trafficLightTi
 // PlayMultiLaneModel takes the initial Multiroad, run Nasch Model for numGens times and return the results
 // Input: a Road object initialRoad, an int object numGens, an int object of traffic light position, a slice of int of time for each status in a light cycle
 // Output: a slice of MultiRoad objects of length numGens+1
-func PlayMultiLaneModel(initialRoad MultiRoad, numGens, lightPos int, lightLane, trafficLightTime []int) []MultiRoad {
+func PlayMultiLaneModel(initialRoad MultiRoad, numGens, lightPos, laneNum int, lightLane, trafficLightTime []int, nsdvPercentage float64) ([]MultiRoad, int) {
 	roads := make([]MultiRoad, numGens+1)
 	roads[0] = initialRoad
 	oneRound := trafficLightTime[0] + trafficLightTime[1] + trafficLightTime[2]
+	totalCnt := 0
+	cnt := 0
 
 	if lightPos > 0 {
 		//Set traffic light status for each generation
@@ -123,13 +134,15 @@ func PlayMultiLaneModel(initialRoad MultiRoad, numGens, lightPos int, lightLane,
 				}
 			}
 
-			roads[i] = MultiLaneSimulation(roads[i-1], i)
+			roads[i], cnt = MultiLaneSimulation(roads[i-1], i, laneNum, nsdvPercentage)
+			totalCnt += cnt
 		}
 	} else {
 		for i := 1; i <= numGens; i++ {
-			roads[i] = MultiLaneSimulation(roads[i-1], i)
+			roads[i], cnt = MultiLaneSimulation(roads[i-1], i, laneNum, nsdvPercentage)
+			totalCnt += cnt
 		}
 	}
 
-	return roads
+	return roads, totalCnt
 }

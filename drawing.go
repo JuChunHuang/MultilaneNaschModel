@@ -79,6 +79,7 @@ func DrawBoardSingle(t []MultiRoad, numGens int, filename string) {
 	c := canvas.CreateNewCanvas(roadLength, numGens+1)
 	c.SetLineWidth(1)
 
+	laneNum := 1
 	for i := 0; i < numGens+1; i++ {
 		for k := 0; k < laneNum; k++ {
 			for j := 0; j < roadLength; j++ {
@@ -118,7 +119,7 @@ func DrawBoardSingle(t []MultiRoad, numGens int, filename string) {
 	c.SaveToPNG(filename)
 }
 
-func DrawBoardMulti(t []MultiRoad, numGens int, filename string) {
+func DrawBoardMulti(t []MultiRoad, numGens, laneNum int, filename string) {
 	c := canvas.CreateNewCanvas(roadLength, (numGens+1)*laneNum)
 	c.SetLineWidth(1)
 
