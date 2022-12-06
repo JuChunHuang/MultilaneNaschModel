@@ -120,10 +120,11 @@ func DrawBoardSingle(t []MultiRoad, numGens int, filename string) {
 }
 
 func DrawBoardMulti(t []MultiRoad, numGens, laneNum int, filename string) {
-	c := canvas.CreateNewCanvas(roadLength, (numGens+1)*laneNum)
+	width := (numGens + 1) / 20 * laneNum
+	c := canvas.CreateNewCanvas(roadLength, width)
 	c.SetLineWidth(1)
 
-	for i := 0; i < numGens+1; i++ {
+	for i := 0; i < (numGens+1)/20; i++ {
 		for k := 0; k < laneNum; k++ {
 			for j := 0; j < roadLength; j++ {
 				if t[i][k][j].kind == 0 {

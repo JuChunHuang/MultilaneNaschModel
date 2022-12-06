@@ -74,8 +74,8 @@ func main() {
 	// play NaschModel
 	timePointsMulti, totalCnt := PlayMultiLaneModel(initialMultiRoad, numGens, trafficLightPos, laneNum, trafficLightLane, trafficLightTime, nsdvPercentage)
 	fmt.Println("Finish running multilane model!")
-	// DrawBoardMulti(timePointsMulti, numGens, "MultiRoadPattern.png")
-	// fmt.Println("Finish running multilane pattern!")
+	DrawBoardMulti(timePointsMulti, numGens, laneNum, "MultiRoadNSDVPattern.png")
+	fmt.Println("Finish running multilane pattern!")
 
 	// generae GIF for multilane results
 	imageListMul := BoardsToImages(timePointsMulti, cellWidth)
