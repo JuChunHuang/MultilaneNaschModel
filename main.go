@@ -62,7 +62,7 @@ func main() {
 	trafficLightTime[2] = 30 // green light
 
 	// set SDVs percentage
-	sdvPercentage := 0.0
+	sdvPercentage := 0.5
 	nsdvPercentage := 1.0 - sdvPercentage
 
 	// set lane number
@@ -74,7 +74,7 @@ func main() {
 	// play NaschModel
 	timePointsMulti, totalCnt := PlayMultiLaneModel(initialMultiRoad, numGens, trafficLightPos, laneNum, trafficLightLane, trafficLightTime, nsdvPercentage)
 	fmt.Println("Finish running multilane model!")
-	DrawBoardMulti(timePointsMulti, numGens, laneNum, "MultiRoadNSDVPattern.png")
+	DrawBoardMulti(timePointsMulti, numGens, laneNum, "MultiRoadPattern.png")
 	fmt.Println("Finish running multilane pattern!")
 
 	// generae GIF for multilane results
