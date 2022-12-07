@@ -97,11 +97,11 @@ func PlaySingleLaneModel(initialRoad Road, numGens, lightPos int, trafficLightTi
 		//Set traffic light status for each generation
 		t := i % oneRound
 		if 1 <= t && t <= 30 {
-			roads[i-1][lightPos].kind = 0 // red light
+			roads[i-1][lightPos].kind = 3 // red light
 		} else if 30 < t && t <= 60 {
-			roads[i-1][lightPos].kind = 0 // green light
+			roads[i-1][lightPos].kind = 5 // green light
 		} else {
-			roads[i-1][lightPos].kind = 0 // yellow light
+			roads[i-1][lightPos].kind = 4 // yellow light
 		}
 		//Run Nasch Model
 		roads[i] = SingleLaneSimulation(roads[i-1])
