@@ -9,7 +9,7 @@ func initialSingleLane(trafficLightPos int) Road {
 	return initialRoad
 }
 
-func initialMultiRoad(trafficLightLane []int, trafficLightPos int) MultiRoad {
+func initialMultiRoad(trafficLightLane []int, trafficLightPos, laneNum int) MultiRoad {
 	initialRoad := make(MultiRoad, laneNum)
 
 	//generate laneNum number of initial SingleRoad
@@ -17,9 +17,11 @@ func initialMultiRoad(trafficLightLane []int, trafficLightPos int) MultiRoad {
 		initialRoad[i] = make(Road, roadLength)
 	}
 
-	// set the trafficLight locations
-	for _, val := range trafficLightLane {
-		initialRoad[val][trafficLightPos].kind = 5
+	if trafficLightPos > 0 {
+		// set the trafficLight locations
+		for _, val := range trafficLightLane {
+			initialRoad[val][trafficLightPos].kind = 5
+		}
 	}
 
 	return initialRoad

@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"math/rand"
 )
 
@@ -64,7 +63,7 @@ func min(k, m int) int {
 }
 
 // Whether the lane is exist
-func ValidLane(lane int) bool {
+func ValidLane(lane, laneNum int) bool {
 	return (lane >= 0 && lane < laneNum)
 }
 
@@ -77,7 +76,7 @@ func Produce(currentRoad *Road, kindPossiblity float64) bool {
 	var kind int
 	var initSpeedBound int
 	if p < kindPossiblity {
-		kind = 2
+		kind = 1
 	} else {
 		kind = 2
 	}
@@ -173,7 +172,6 @@ func CheckTrain(road Road, carIndex int) bool {
 	var sum int
 	sum = 1 + CheckPreviousTrain(road, carIndex) + CheckNextTrain(road, carIndex)
 	if sum >= 3 {
-		fmt.Println(sum)
 		return true
 	} else {
 		return false
