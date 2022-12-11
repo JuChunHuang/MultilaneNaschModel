@@ -10,7 +10,7 @@ func main() {
 	var cellWidth int
 	var trafficLightPos int
 	var trafficLightTime []int
-	var trafficLightLane []int
+	// var trafficLightLane []int
 
 	// GIF generation settings
 	numGens = 2400
@@ -53,35 +53,35 @@ func main() {
 
 	// MultiLane ==============================================================
 
-	// set traffic lights position
-	trafficLightLane = []int{1, 2, 3}
-	trafficLightPos = 0
-	trafficLightTime = make([]int, 3)
-	trafficLightTime[0] = 30 // red light
-	trafficLightTime[1] = 5  // yellow light
-	trafficLightTime[2] = 30 // green light
+	// // set traffic lights position
+	// trafficLightLane = []int{1, 2, 3}
+	// trafficLightPos = 0
+	// trafficLightTime = make([]int, 3)
+	// trafficLightTime[0] = 30 // red light
+	// trafficLightTime[1] = 5  // yellow light
+	// trafficLightTime[2] = 30 // green light
 
-	// set SDVs percentage
-	sdvPercentage := 0.0
-	nsdvPercentage := 1.0 - sdvPercentage
+	// // set SDVs percentage
+	// sdvPercentage := 0.5
+	// nsdvPercentage := 1.0 - sdvPercentage
 
-	// set lane number
-	laneNum := 5
+	// // set lane number
+	// laneNum := 5
 
-	// initialize multiple roads
-	initialMultiRoad := initialMultiRoad(trafficLightLane, trafficLightPos, laneNum)
+	// // initialize multiple roads
+	// initialMultiRoad := initialMultiRoad(trafficLightLane, trafficLightPos, laneNum)
 
-	// play NaschModel
-	timePointsMulti, totalCnt := PlayMultiLaneModel(initialMultiRoad, numGens, trafficLightPos, laneNum, trafficLightLane, trafficLightTime, nsdvPercentage)
-	fmt.Println("Finish running multilane model!")
-	DrawBoardMulti(timePointsMulti, numGens, laneNum, "MultiRoadNSDVPattern.png")
-	fmt.Println("Finish running multilane pattern!")
+	// // play NaschModel
+	// timePointsMulti, totalCnt := PlayMultiLaneModel(initialMultiRoad, numGens, trafficLightPos, laneNum, trafficLightLane, trafficLightTime, nsdvPercentage)
+	// fmt.Println("Finish running multilane model!")
+	// DrawBoardMulti(timePointsMulti, numGens, laneNum, "MultiRoadPattern.png")
+	// fmt.Println("Finish running multilane pattern!")
 
-	// generae GIF for multilane results
-	imageListMul := BoardsToImages(timePointsMulti, cellWidth)
-	gifhelper.ImagesToGIF(imageListMul, "Multilane")
-	fmt.Println("Finish drawing multi lane model results!")
-	fmt.Println(totalCnt)
+	// // generae GIF for multilane results
+	// imageListMul := BoardsToImages(timePointsMulti, cellWidth)
+	// gifhelper.ImagesToGIF(imageListMul, "Multilane")
+	// fmt.Println("Finish drawing multi lane model results!")
+	// fmt.Println(totalCnt)
 
 }
 
