@@ -20,7 +20,7 @@ func initialMultiRoad(trafficLightLane []int, trafficLightPos, laneNum int) Mult
 	if trafficLightPos > 0 {
 		// set the trafficLight locations
 		for _, val := range trafficLightLane {
-			initialRoad[val][trafficLightPos].kind = 5
+			initialRoad[val][trafficLightPos].kind = 3
 		}
 	}
 
