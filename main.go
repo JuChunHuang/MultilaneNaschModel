@@ -3,7 +3,6 @@ package main
 import (
 	"C"
 	"fmt"
-	"unsafe"
 )
 
 func main() {
@@ -150,27 +149,4 @@ func PlayMultiLaneModel(initialRoad MultiRoad, numGens, lightPos, laneNum int, l
 	}
 
 	return roads, totalCnt
-}
-
-//export returnIntArray
-func returnIntArray(first *int, length int) uintptr {
-	// #1
-	const buffer = 1024
-	if length > buffer {
-		fmt.Println("array must not great than %s \n", buffer)
-	}
-	goArray := (*[buffer]int)(unsafe.Pointer(first)) // #2
-	var goSlice []int = goArray[:length]             // #3
-	fmt.Println(goSlice)
-
-	last := length - 1
-	goSlice[0], goSlice[last] = goSlice[last], goSlice[0] // #4
-
-	const arrayLength = 10
-	ret := C.malloc(C.size_t(arrayLength) * C.size_t(unsafe.Sizeof(C.longlong(0)))) // #5
-	pRet := (*[arrayLength]C.longlong)(ret)                                         // #6
-	for i := 0; i < 10; i++ {
-		pRet[i] = C.longlong(i)
-	}
-	return uintptr(ret) // #7
 }
