@@ -1,5 +1,7 @@
 package main
 
+import "C"
+
 const roadLength = 50
 const maxSpeed = 10
 

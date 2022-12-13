@@ -1,5 +1,8 @@
 package main
 
+import "C"
+
+//export initialSingleLane
 func initialSingleLane(trafficLightPos int) Road {
 	initialRoad := make(Road, roadLength)
 
@@ -9,6 +12,7 @@ func initialSingleLane(trafficLightPos int) Road {
 	return initialRoad
 }
 
+//export initialMultiRoad
 func initialMultiRoad(trafficLightLane []int, trafficLightPos, laneNum int) MultiRoad {
 	initialRoad := make(MultiRoad, laneNum)
 

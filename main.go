@@ -1,8 +1,9 @@
 package main
 
 import (
+	"C"
 	"fmt"
-	"gifhelper"
+	"unsafe"
 )
 
 func main() {
@@ -79,7 +80,7 @@ func main() {
 
 	// generae GIF for multilane results
 	imageListMul := BoardsToImages(timePointsMulti, cellWidth)
-	gifhelper.ImagesToGIF(imageListMul, "Multilane")
+	ImagesToGIF(imageListMul, "Multilane")
 	fmt.Println("Finish drawing multi lane model results!")
 	fmt.Println(totalCnt)
 
@@ -88,6 +89,8 @@ func main() {
 // PlaySingleLaneModel takes the initial road, run Nasch Model for numGens times and return the results
 // Input: a Road object initialRoad, an int object numGens, an int object of traffic light position, a slice of int of time for each status in a light cycle
 // Output: a slice of Road objects of length numGens+1
+//
+//export PlaySingleLaneModel
 func PlaySingleLaneModel(initialRoad Road, numGens, lightPos int, trafficLightTime []int) []Road {
 	roads := make([]Road, numGens+1)
 	roads[0] = initialRoad
@@ -113,6 +116,8 @@ func PlaySingleLaneModel(initialRoad Road, numGens, lightPos int, trafficLightTi
 // PlayMultiLaneModel takes the initial Multiroad, run Nasch Model for numGens times and return the results
 // Input: a Road object initialRoad, an int object numGens, an int object of traffic light position, a slice of int of time for each status in a light cycle
 // Output: a slice of MultiRoad objects of length numGens+1
+//
+//export PlayMultiLaneModel
 func PlayMultiLaneModel(initialRoad MultiRoad, numGens, lightPos, laneNum int, lightLane, trafficLightTime []int, nsdvPercentage float64) ([]MultiRoad, int) {
 	roads := make([]MultiRoad, numGens+1)
 	roads[0] = initialRoad
@@ -145,4 +150,27 @@ func PlayMultiLaneModel(initialRoad MultiRoad, numGens, lightPos, laneNum int, l
 	}
 
 	return roads, totalCnt
+}
+
+//export returnIntArray
+func returnIntArray(first *int, length int) uintptr {
+	// #1
+	const buffer = 1024
+	if length > buffer {
+		fmt.Println("array must not great than %s \n", buffer)
+	}
+	goArray := (*[buffer]int)(unsafe.Pointer(first)) // #2
+	var goSlice []int = goArray[:length]             // #3
+	fmt.Println(goSlice)
+
+	last := length - 1
+	goSlice[0], goSlice[last] = goSlice[last], goSlice[0] // #4
+
+	const arrayLength = 10
+	ret := C.malloc(C.size_t(arrayLength) * C.size_t(unsafe.Sizeof(C.longlong(0)))) // #5
+	pRet := (*[arrayLength]C.longlong)(ret)                                         // #6
+	for i := 0; i < 10; i++ {
+		pRet[i] = C.longlong(i)
+	}
+	return uintptr(ret) // #7
 }
