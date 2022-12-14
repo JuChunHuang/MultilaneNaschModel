@@ -144,3 +144,68 @@ func TestGetTrainHead(t *testing.T) {
 	}
 
 }
+
+func TestGetPrevCar(t *testing.T) {
+	//change roadLength = 8
+	var road Road
+
+	var a Car
+	a.kind = 0
+
+	var b Car
+	b.kind = 2
+	b.speed = 1
+
+	var c Car
+	c.kind = 0
+
+	var d Car
+	d.kind = 2
+	d.speed = 3
+
+	var e Car
+	e.kind = 2
+	e.speed = 4
+
+	var emp Car
+	emp.kind = 0
+
+	road = append(road, a, d, emp, emp, emp, emp, emp, e)
+	if GetPrevCar(road, 1) == 7 {
+		fmt.Println("pass the test for GetPrevCar!")
+	} else if CheckTrain(road, 3) == true {
+		fmt.Println("Do not pass the test for GetPrevCar!")
+	}
+}
+
+func TestGetPrevLight(t *testing.T) {
+	//change roadLength = 8
+	var road Road
+
+	var a Car
+	a.kind = 0
+
+	var b Car
+	b.kind = 2
+	b.speed = 1
+
+	var c Car
+	c.kind = 0
+
+	var d Car
+	d.kind = 2
+	d.speed = 3
+
+	var e Car
+	e.kind = 4
+
+	var emp Car
+	emp.kind = 0
+
+	road = append(road, a, d, emp, emp, emp, emp, emp, e)
+	if GetPrevCar(road, 1) == 7 {
+		fmt.Println("pass the test for GetPrevLight!")
+	} else if CheckTrain(road, 3) == true {
+		fmt.Println("Do not pass the test for GetPrevLight!")
+	}
+}

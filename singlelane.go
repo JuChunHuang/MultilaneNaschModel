@@ -30,22 +30,28 @@ func SingleLaneSimulation(currentRoad Road) Road {
 		prevCarIndex = GetPrevCar(currentRoad, i)
 		prevLightIndex := GetPrevLight(currentRoad, i)
 
+		// if we do not have a previous car
 		if prevCarIndex >= roadLength {
 			prevCar.backlight = -2
 		} else {
 			prevCar = currentRoad[prevCarIndex]
 		}
 
+		// if we do not have a previous light
 		if prevLightIndex >= roadLength {
 			prevLight.kind = 0
 		} else {
 			prevLight = currentRoad[prevLightIndex]
 		}
 
+		// get the distance between the previous and the current car
 		delta_d := prevCarIndex - i
+		// get the distance between the traffic light and the current car
 		deltaDLight := prevLightIndex - i
 
+		// if the current car is an NSDV
 		if kind == 1 {
+			// Deceleration conditions
 			if prevCar.backlight == -1 && delta_d > safeSpaceMin[speed] && delta_d < safeSpaceMin[speed] &&
 				(deltaDLight > safetraffic[speed] || deltaDLight < 0) {
 				probOfDecel = p1
@@ -58,6 +64,7 @@ func SingleLaneSimulation(currentRoad Road) Road {
 				probOfDecel = 0
 			}
 
+			// get a threshold possibility to decide whether we should decelerate
 			thresToDecel := rand.Float64()
 
 			if probOfDecel < thresToDecel {
@@ -82,19 +89,23 @@ func SingleLaneSimulation(currentRoad Road) Road {
 				}
 			}
 
+			// stop in front of a red light or a yellow light
 			if deltaDLight >= 0 && deltaDLight <= safetraffic[speed] && (prevLight.kind == 3 || prevLight.kind == 4) {
 				newSpeed = 0
 				newLight = -1
 			}
 
+			// avoid cases when the speed exceeds the limits
 			if newSpeed < 0 {
 				newSpeed = 0
 			} else if newSpeed > 10 {
 				newSpeed = 10
 			}
 
+			// new position for the current car
 			newIndex := i + newSpeed
 			if newIndex >= roadLength {
+				// count the cars which pass the entire road
 				carCnt++
 			} else if newIndex < roadLength && newRoad[newIndex].kind != 0 {
 				// fmt.Println("NSDV crashes something", newIndex, newRoad[newIndex].kind)
@@ -104,12 +115,15 @@ func SingleLaneSimulation(currentRoad Road) Road {
 				newRoad[newIndex].kind = kind
 				newRoad[newIndex].backlight = newLight
 			}
+			// if the current car is an SDV and has no traffic light ahead
 		} else if kind == 2 && prevLight.kind == 0 {
+			// if we do not have a previous car, we can accelerate
 			if prevCarIndex > roadLength {
 				newSpeed = speed + 1
 				newLight = 1
 				newAccel = 1
 			} else {
+				// for other condtions that we can accelerate
 				if delta_d >= safeSpaceSDVMin[speed] {
 					newSpeed = speed + 1
 					newLight = 1
@@ -123,6 +137,7 @@ func SingleLaneSimulation(currentRoad Road) Road {
 					newSpeed = delta_d - safeSpaceSDVMin[speed] - 1
 					newLight = 1
 					newAccel = 1
+					// if the previous car is an SDV, we then check if this forms an SDV-train
 				} else if prevCar.kind == 2 && delta_d <= GetSDVmindis(i, prevCarIndex, currentRoad) && CheckTrain(currentRoad, i) == true {
 					trainHead := GetTrainHead(currentRoad, i)
 					// if delta_d > GetSDVmindis(i, prevCarIndex, currentRoad) {
@@ -131,6 +146,7 @@ func SingleLaneSimulation(currentRoad Road) Road {
 					newSpeed = currentRoad[trainHead].speed
 					newLight = currentRoad[trainHead].backlight
 					newAccel = currentRoad[trainHead].accel
+					// slow down if there is a red light or yellow light ahead or a car ahead and we are getting close
 				} else if prevLight.kind < 5 && deltaDLight <= safeSpaceMin[0] {
 					newSpeed = speed - 1
 					newLight = -1
@@ -142,13 +158,16 @@ func SingleLaneSimulation(currentRoad Road) Road {
 
 			}
 
+			// avoid cases when the speed exceeds the limits
 			if newSpeed < 0 {
 				newSpeed = 0
 			} else if newSpeed > 10 {
 				newSpeed = 10
 			}
+			// new position for the current car
 			newIndex := i + newSpeed
 
+			// count the cars which pass the entire road
 			if newIndex >= roadLength {
 				carCnt++
 			} else if newIndex < roadLength && newRoad[newIndex].kind != 0 {
@@ -159,8 +178,9 @@ func SingleLaneSimulation(currentRoad Road) Road {
 				newRoad[newIndex].accel = newAccel
 				newRoad[newIndex].kind = kind
 			}
-
+			// if current car is an SDV and there is a red light or yellow light ahead
 		} else if kind == 2 && (prevLight.kind == 3 || prevLight.kind == 4) {
+			// if the previous car went over the traffic light
 			if prevCarIndex > prevLightIndex {
 				delta_d = prevLightIndex - i
 				prevCarIndex = prevLightIndex
@@ -186,6 +206,7 @@ func SingleLaneSimulation(currentRoad Road) Road {
 				newSpeed = currentRoad[trainHead].speed
 				newLight = currentRoad[trainHead].backlight
 				newAccel = currentRoad[trainHead].accel
+				// stop in front of a red light or a yellow light
 			} else if prevLight.kind >= 3 && deltaDLight <= safeSpaceMin[0] {
 				newSpeed = 0
 				newLight = 0
@@ -202,9 +223,11 @@ func SingleLaneSimulation(currentRoad Road) Road {
 
 			var newIndex int
 
+			// we do not allow the car goes over the traffic light
 			if newIndex > roadLength/2 {
 				newSpeed = 0
 			}
+			// avoid cases when the speed exceeds the limits
 			if newSpeed < 0 {
 				newSpeed = 0
 			} else if newSpeed > 10 {
@@ -212,17 +235,26 @@ func SingleLaneSimulation(currentRoad Road) Road {
 			}
 			newIndex = i + newSpeed
 
-			newRoad[newIndex].speed = newSpeed
-			newRoad[newIndex].backlight = newLight
-			newRoad[newIndex].accel = newAccel
-			newRoad[newIndex].kind = kind
+			// count the cars which pass the entire road
+			if newIndex >= roadLength {
+				carCnt++
+			} else {
+				// change the status of the road cells
+				newRoad[newIndex].speed = newSpeed
+				newRoad[newIndex].backlight = newLight
+				newRoad[newIndex].accel = newAccel
+				newRoad[newIndex].kind = kind
+			}
 
+			// if current car is an SDV and there is a green light ahead
 		} else if kind == 2 && prevLight.kind == 5 {
+			// if the previous car is far away or we do not have a previous car
 			if delta_d >= safeSpaceSDVMin[speed] {
 				newSpeed = speed + 1
 				newLight = 1
 				newAccel = 1
 			}
+			// other conditions for acceleration
 			if prevCar.kind == 1 && prevCar.backlight != -1 && delta_d >= safeSpaceMin[speed] {
 				newSpeed = speed + 1
 				newLight = 1
@@ -239,6 +271,7 @@ func SingleLaneSimulation(currentRoad Road) Road {
 				newSpeed = currentRoad[trainHead].speed
 				newLight = currentRoad[trainHead].backlight
 				newAccel = currentRoad[trainHead].accel
+				// slow down in front of a red light or yellow light
 			} else if prevLight.kind < 5 && deltaDLight <= safeSpaceMin[0] {
 				newSpeed = speed - 1
 				newLight = -1
@@ -248,6 +281,7 @@ func SingleLaneSimulation(currentRoad Road) Road {
 				newAccel = 0
 			}
 
+			// avoid cases when the speed exceeds the limits
 			if newSpeed < 0 {
 				newSpeed = 0
 			} else if newSpeed > 10 {
@@ -255,6 +289,7 @@ func SingleLaneSimulation(currentRoad Road) Road {
 			}
 			newIndex := i + newSpeed
 
+			// count the cars which pass the entire road
 			if newIndex >= roadLength {
 				carCnt++
 			} else if newIndex < roadLength && newRoad[newIndex].kind != 0 {
