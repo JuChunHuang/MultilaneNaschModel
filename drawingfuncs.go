@@ -39,7 +39,7 @@ func ImagesToGIF(imglist []image.Image, filename string) {
 
 	for i := range imglist {
 		g.Image[i] = ImageToPaletted(imglist[i])
-		g.Delay[i] = 10
+		g.Delay[i] = 20
 	}
 
 	gif.EncodeAll(w, &g)

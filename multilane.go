@@ -5,12 +5,11 @@ import (
 	"math/rand"
 )
 
-func MultiLaneSimulation(currentRoad MultiRoad, i, laneNum int, nsdvPercentage float64) (MultiRoad, int) {
+func MultiLaneSimulation(currentRoad MultiRoad, i, laneNum int, sdvPercentage float64) (MultiRoad, int) {
 	// whether to produce a new car at the beginning of each road
-	if i%4 == 0 {
-		ProduceMulti(&currentRoad, nsdvPercentage)
+	if i%2 == 0 {
+		ProduceMulti(&currentRoad, sdvPercentage)
 	}
-	//ProduceMulti(&currentRoad, nsdvPercentage)
 	// return a MultiRoad that all cars have been determined changing lane or not
 	currentRoad = ChangeLane(&currentRoad, laneNum)
 	// return a MultiRoad that all cars move to their new index based on newspeed
@@ -23,7 +22,6 @@ func ChangeSpeed(currentRoad MultiRoad, laneNum int) (MultiRoad, int) {
 	var carCnt int
 	var kind int
 	var prevCarIndex int
-	var prevLightIndex int
 
 	// make a new empty multi-lane road
 	newRoad := make(MultiRoad, laneNum)
@@ -39,14 +37,13 @@ func ChangeSpeed(currentRoad MultiRoad, laneNum int) (MultiRoad, int) {
 		for j := roadLength - 1; j >= 0; j-- {
 			// get the nearest car and traffic light ahead
 			prevCarIndex = GetPrevCar(currentRoad[curLane], j)
-			prevLightIndex = GetPrevLight(currentRoad[curLane], j)
 			kind = currentRoad[curLane][j].kind
 
 			// if current car is a NSDV
 			if kind == 1 {
-				ChangeSpeedNSDV(&currentRoad, &newRoad, &carCnt, curLane, j, prevCarIndex, prevLightIndex)
+				ChangeSpeedNSDV(&currentRoad, &newRoad, &carCnt, curLane, j, prevCarIndex, laneNum)
 			} else if kind == 2 {
-				ChangeSpeedSDV(&currentRoad, &newRoad, &carCnt, curLane, j, prevCarIndex, prevLightIndex)
+				ChangeSpeedSDV(&currentRoad, &newRoad, &carCnt, curLane, j, prevCarIndex)
 			} else {
 				newRoad[curLane][j] = currentRoad[curLane][j]
 			}
@@ -55,343 +52,177 @@ func ChangeSpeed(currentRoad MultiRoad, laneNum int) (MultiRoad, int) {
 	return newRoad, carCnt
 }
 
-func ChangeSpeedSDV(currentRoad, newRoad *MultiRoad, carCnt *int, curLane, currentIndex, prevCarIndex, prevLightIndex int) {
+func ChangeSpeedSDV(currentRoad, newRoad *MultiRoad, carCnt *int, curLane, currentIndex, prevCarIndex int) {
 	var newSpeed int
 	var newLight int
-	var newAccel int
 	var prevCar Car
-	var prevLight Car
 	currentCar := (*currentRoad)[curLane][currentIndex]
 	speed := currentCar.speed
 
-	// make sure the previous car is within the road length
-	if prevCarIndex >= roadLength {
-		prevCar.kind = 0
+	deltaD := prevCarIndex - currentIndex
+
+	if deltaD >= roadLength {
+		newSpeed = speed + 1
+		newLight = 0
 	} else {
 		prevCar = (*currentRoad)[curLane][prevCarIndex]
+		if prevCar.kind == 1 || prevCar.kind == 3 {
+			if deltaD >= safeSpaceMax[speed] {
+				newSpeed = speed + 1
+				newLight = 0
+			} else if deltaD < safeSpaceMax[speed] && deltaD >= safeSpaceMin[speed] {
+				if prevCar.backlight == 0 {
+					newSpeed = speed + 1
+					newLight = 0
+				} else {
+					newSpeed = speed - 1
+					newLight = 1
+				}
+
+			} else if deltaD < safeSpaceMin[speed] {
+				newSpeed = min(speed-1, deltaD-1)
+				newLight = 1
+			}
+		} else if prevCar.kind == 2 {
+			SDVminDis := GetSDVmindis(currentIndex, prevCarIndex, (*currentRoad)[curLane])
+			if deltaD >= safeSpaceMax[speed] {
+				newSpeed = speed + 1
+				newLight = 0
+			} else if deltaD > SDVminDis && deltaD < safeSpaceMax[speed] {
+				if CheckTrain((*currentRoad)[curLane], prevCarIndex) >= 5 {
+					if prevCar.speed >= speed {
+						newSpeed = speed
+						newLight = 0
+					} else {
+						newSpeed = prevCar.speed
+						newLight = 1
+					}
+				} else {
+					if prevCar.speed >= speed {
+						newSpeed = speed + 1
+						newLight = 0
+					} else {
+						newSpeed = prevCar.speed + 1
+						newLight = 1
+					}
+				}
+
+			} else {
+				if CheckTrain((*currentRoad)[curLane], prevCarIndex) >= 5 {
+					newSpeed = prevCar.speed - 1
+					newLight = 1
+				} else {
+					newSpeed = prevCar.speed
+					newLight = prevCar.backlight
+				}
+
+			}
+		}
 	}
 
-	// make sure the previous traffic light is within the road length
-	if prevLightIndex >= roadLength {
-		prevLight.kind = 0
+	if newSpeed < 0 {
+		newSpeed = 0
+	} else if newSpeed > maxSpeed {
+		newSpeed = maxSpeed
+	}
+	newIndex := currentIndex + newSpeed
+
+	if newIndex >= roadLength {
+		(*carCnt)++
+	} else if newIndex < roadLength && (*newRoad)[curLane][newIndex].kind != 0 {
+		fmt.Println("SDV crashes something.", newIndex)
 	} else {
-		prevLight = (*currentRoad)[curLane][prevLightIndex]
+		(*newRoad)[curLane][newIndex].speed = newSpeed
+		(*newRoad)[curLane][newIndex].backlight = newLight
+		(*newRoad)[curLane][newIndex].kind = currentCar.kind
+		(*newRoad)[curLane][newIndex].turninglight = currentCar.turninglight
 	}
 
-	deltaD := prevCarIndex - currentIndex
-	//deltaDLight := prevLightIndex - currentIndex
-
-	if prevLight.kind == 5 || prevLight.kind == 0 {
-		// if there's no traffic light ahead or the traffic light ahead is green
-
-		if deltaD >= safeSpaceSDVMin[speed] {
-			newSpeed = speed + 1
-			newLight = 1
-			newAccel = 1
-		} else if prevCar.kind == 1 && prevCar.backlight != -1 {
-			newSpeed = speed
-			newLight = 0
-			newAccel = 0
-		} else if prevCar.kind == 1 && prevCar.backlight == -1 {
-			newSpeed = speed - 1
-			newLight = -1
-			newAccel = 0
-		} else if prevCar.kind == 2 && deltaD <= GetSDVmindis(currentIndex, prevCarIndex, (*currentRoad)[curLane]) {
-			newSpeed = speed - 1
-			newLight = -1
-			newAccel = 0
-		} else if prevCar.kind == 2 && deltaD >= GetSDVmindis(currentIndex, prevCarIndex, (*currentRoad)[curLane]) && CheckTrain((*currentRoad)[curLane], currentIndex) {
-
-			trainHead := GetTrainHead((*currentRoad)[curLane], currentIndex)
-
-			newSpeed = (*currentRoad)[curLane][trainHead].speed
-			newLight = (*currentRoad)[curLane][trainHead].backlight
-			newAccel = (*currentRoad)[curLane][trainHead].accel
-		} else {
-			newSpeed = speed
-			newLight = 0
-			newAccel = 0
-		}
-
-		if newSpeed < 0 {
-			newSpeed = 0
-		} else if newSpeed > maxSpeed {
-			newSpeed = maxSpeed
-		}
-
-		// if prevLight.kind == 5 && newSpeed == 0 {
-
-		// }
-
-		// if CheckTrain((*currentRoad)[curLane], currentIndex) {
-		// 	trainHead := GetTrainHead((*currentRoad)[curLane], currentIndex)
-		// 	if trainHead != currentIndex {
-		// 		if deltaD > GetSDVmindis(currentIndex, prevCarIndex, (*currentRoad)[curLane]) {
-		// 			panic("not SDV Train")
-		// 		}
-		// 		fmt.Println("IS SDV train!")
-		// 		newSpeed = (*currentRoad)[curLane][trainHead].speed
-		// 		newLight = (*currentRoad)[curLane][trainHead].backlight
-		// 		newAccel = (*currentRoad)[curLane][trainHead].accel
-		// 	}
-		// }
-
-		newIndex := currentIndex + newSpeed
-
-		if newIndex >= roadLength {
-			(*carCnt)++
-		} else if newIndex < roadLength && (*newRoad)[curLane][newIndex].kind != 0 {
-			//fmt.Println("SDV crashes something.", newIndex)
-		} else {
-			(*newRoad)[curLane][newIndex].speed = newSpeed
-			(*newRoad)[curLane][newIndex].backlight = newLight
-			(*newRoad)[curLane][newIndex].accel = newAccel
-			(*newRoad)[curLane][newIndex].kind = currentCar.kind
-			(*newRoad)[curLane][newIndex].turninglight = currentCar.turninglight
-		}
-
-	} else if prevLight.kind == 3 || prevLight.kind == 4 {
-		// if the traffic light ahead is yellow or red
-
-		if prevCarIndex > prevLightIndex {
-			deltaD = prevLightIndex - currentIndex
-			prevCarIndex = prevLightIndex
-			speed = 0
-			prevCar.kind = 3
-		}
-
-		if deltaD >= safeSpaceMin[speed] {
-			newSpeed = speed + 1
-			newLight = 1
-			newAccel = 1
-		} else if prevCar.kind == 1 && prevCar.backlight != -1 {
-			newSpeed = speed
-			newLight = 0
-			newAccel = 0
-		} else if prevCar.kind == 1 && prevCar.backlight == -1 {
-			newSpeed = speed - 1
-			newLight = -1
-			newAccel = 0
-		} else if prevCar.kind == 2 && deltaD <= GetSDVmindis(currentIndex, prevCarIndex, (*currentRoad)[curLane]) {
-			newSpeed = speed - 1
-			newLight = -1
-			newAccel = 1
-		} else if prevCar.kind == 2 && deltaD > GetSDVmindis(currentIndex, prevCarIndex, (*currentRoad)[curLane]) && CheckTrain((*currentRoad)[curLane], currentIndex) {
-
-			trainHead := GetTrainHead((*currentRoad)[curLane], currentIndex)
-
-			newSpeed = (*currentRoad)[curLane][trainHead].speed
-			newLight = (*currentRoad)[curLane][trainHead].backlight
-			newAccel = (*currentRoad)[curLane][trainHead].accel
-		} else if prevLight.kind == 3 {
-			newSpeed = speed - 1
-			newLight = -1
-			newAccel = 0
-		} else {
-			newSpeed = speed
-			newLight = 0
-			newAccel = 0
-		}
-
-		// if deltaD < safetraffic[speed] {
-		// 	newSpeed = deltaD / 3
-		// 	newLight = -1
-		// }
-
-		if newSpeed < 0 {
-			newSpeed = 0
-		} else if newSpeed > maxSpeed {
-			newSpeed = maxSpeed
-		}
-		// if CheckTrain((*currentRoad)[curLane], currentIndex) {
-		// 	trainHead := GetTrainHead((*currentRoad)[curLane], currentIndex)
-		// 	if trainHead != currentIndex {
-		// 		if deltaD > GetSDVmindis(currentIndex, prevCarIndex, (*currentRoad)[curLane]) {
-		// 			panic("not SDV Train")
-		// 		}
-		// 		fmt.Println("IS SDV train!")
-		// 		newSpeed = (*currentRoad)[curLane][trainHead].speed
-		// 		newLight = (*currentRoad)[curLane][trainHead].backlight
-		// 		newAccel = (*currentRoad)[curLane][trainHead].accel
-		// 	}
-		// }
-
-		newIndex := currentIndex + newSpeed
-		// if newIndex > roadLength/2 {
-		// 	newSpeed = 0
-		// }
-
-		if newIndex >= roadLength {
-			(*carCnt)++
-		} else if newIndex < roadLength && (*newRoad)[curLane][newIndex].kind != 0 {
-			// fmt.Println("SDV crashes something.", newIndex)
-		} else {
-			(*newRoad)[curLane][newIndex].speed = newSpeed
-			(*newRoad)[curLane][newIndex].backlight = newLight
-			(*newRoad)[curLane][newIndex].accel = newAccel
-			(*newRoad)[curLane][newIndex].kind = currentCar.kind
-			(*newRoad)[curLane][newIndex].turninglight = currentCar.turninglight
-		}
-	}
-
-	// else if prevLight.kind == 0 {
-
-	// 	if prevCarIndex > roadLength {
-	// 		newSpeed = speed + 1
-	// 		newLight = 1
-	// 		newAccel = 1
-	// 	} else {
-	// 		if deltaD >= safeSpaceSDVMin[speed] {
-	// 			newSpeed = speed + 1
-	// 			newLight = 1
-	// 			newAccel = 1
-	// 		}
-
-	// 		if prevCar.kind == 1 && prevCar.backlight != -1 && deltaD >= safeSpaceMin[speed] {
-	// 			newSpeed = speed + 1
-	// 			newLight = 1
-	// 			newAccel = 1
-	// 		} else if prevCar.kind == 2 && deltaD > GetSDVmindis(currentIndex, prevCarIndex, (*currentRoad)[curLane]) {
-	// 			newSpeed = deltaD - safeSpaceSDVMin[speed] - 1
-	// 			newLight = 1
-	// 			newAccel = 1
-	// 		} else if prevCar.kind == 2 && deltaD <= GetSDVmindis(currentIndex, prevCarIndex, (*currentRoad)[curLane]) && CheckTrain((*currentRoad)[curLane], currentIndex) {
-
-	// 			trainHead := GetTrainHead((*currentRoad)[curLane], currentIndex)
-
-	// 			newSpeed = (*currentRoad)[curLane][trainHead].speed
-	// 			newLight = (*currentRoad)[curLane][trainHead].backlight
-	// 			newAccel = (*currentRoad)[curLane][trainHead].accel
-	// 		} else if prevLight.kind < 5 && deltaDLight <= safeSpaceMin[0] {
-	// 			newSpeed = speed - 1
-	// 			newLight = -1
-	// 			newAccel = 0
-	// 		} else {
-	// 			newLight = 0
-	// 			newAccel = 0
-	// 		}
-
-	// 	}
-
-	// 	if newSpeed < 0 {
-	// 		newSpeed = 0
-	// 	} else if newSpeed > maxSpeed {
-	// 		newSpeed = maxSpeed
-	// 	}
-
-	// 	// if CheckTrain((*currentRoad)[curLane], currentIndex) {
-	// 	// 	trainHead := GetTrainHead((*currentRoad)[curLane], currentIndex)
-	// 	// 	if trainHead != currentIndex {
-	// 	// 		if deltaD > GetSDVmindis(currentIndex, prevCarIndex, (*currentRoad)[curLane]) {
-	// 	// 			panic("not SDV Train")
-	// 	// 		}
-	// 	// 		fmt.Println("IS SDV train!")
-	// 	// 		newSpeed = (*currentRoad)[curLane][trainHead].speed
-	// 	// 		newLight = (*currentRoad)[curLane][trainHead].backlight
-	// 	// 		newAccel = (*currentRoad)[curLane][trainHead].accel
-	// 	// 	}
-	// 	// }
-
-	// 	newIndex := currentIndex + newSpeed
-
-	// 	if newIndex >= roadLength {
-	// 		(*carCnt)++
-	// 	} else if newIndex < roadLength && (*newRoad)[curLane][newIndex].kind != 0 {
-	// 		// fmt.Println("SDV crashes something.", newIndex)
-	// 	} else {
-	// 		(*newRoad)[curLane][newIndex].speed = newSpeed
-	// 		(*newRoad)[curLane][newIndex].backlight = newLight
-	// 		(*newRoad)[curLane][newIndex].accel = newAccel
-	// 		(*newRoad)[curLane][newIndex].kind = currentCar.kind
-	// 		(*newRoad)[curLane][newIndex].turninglight = currentCar.turninglight
-	// 	}
-
-	// }
 }
 
-func ChangeSpeedNSDV(currentRoad, newRoad *MultiRoad, carCnt *int, curLane, currentIndex, prevCarIndex, prevLightIndex int) {
-	var probOfDecel float64
-	var thresToDecel float64
+func CheckNearbyLaneChange(currentRoad *MultiRoad, curLane, currentIndex, laneNum int) bool {
+	var leftPrevIndex int
+	var deltaLeft int
+	var rightPrevIndex int
+	var deltaRight int
+	var aimLane int
+	var speed int
+	var leftNear, rightNear bool
+
+	speed = (*currentRoad)[curLane][currentIndex].speed
+
+	if ValidLane(curLane-1, laneNum) {
+		aimLane = curLane - 1
+		leftPrevIndex = GetPrevCar((*currentRoad)[aimLane], currentIndex)
+		deltaLeft = leftPrevIndex - currentIndex
+		if leftPrevIndex <= roadLength {
+			if deltaLeft < safeSpaceMax[speed] && (*currentRoad)[aimLane][leftPrevIndex].backlight == 1 {
+				leftNear = true
+			} else {
+				leftNear = false
+			}
+		}
+
+	}
+
+	if ValidLane(curLane+1, laneNum) {
+		aimLane = curLane + 1
+		rightPrevIndex = GetPrevCar((*currentRoad)[aimLane], currentIndex)
+		deltaRight = leftPrevIndex - currentIndex
+		if rightPrevIndex <= roadLength {
+			if deltaRight < safeSpaceMax[speed] && (*currentRoad)[aimLane][rightPrevIndex].backlight == -1 {
+				rightNear = true
+			} else {
+				rightNear = false
+			}
+		}
+
+	}
+
+	if leftNear || rightNear {
+		return true
+	} else {
+		return false
+	}
+}
+
+func ChangeSpeedNSDV(currentRoad, newRoad *MultiRoad, carCnt *int, curLane, currentIndex, prevCarIndex, laneNum int) {
 	var newSpeed int
 	var newLight int
 	var prevCar Car
-	var prevLight Car
 	currentCar := (*currentRoad)[curLane][currentIndex]
 	speed := currentCar.speed
 
-	// make sure the previous car is within the road length
-	if prevCarIndex >= roadLength {
-		prevCar.kind = 0
-	} else {
-		prevCar = (*currentRoad)[curLane][prevCarIndex]
-	}
+	var deltaD int
 
-	// make sure the previous traffic light is within the road length
-	if prevLightIndex >= roadLength {
-		prevLight.kind = 0
-	} else {
-		prevLight = (*currentRoad)[curLane][prevLightIndex]
-	}
+	deltaD = prevCarIndex - currentIndex
 
-	deltaD := prevCarIndex - currentIndex
-	//deltaDLight := prevLightIndex - currentIndex
-
-	if prevLight.kind == 3 || prevLight.kind == 4 {
-		if prevCarIndex > prevLightIndex {
-			deltaD = prevLightIndex - currentIndex
-			prevCarIndex = prevLightIndex
-			prevCar.backlight = -1
-			speed = 0
-			prevCar.kind = 3
-		}
-	}
-
-	// NSDV may decelerate stochastically, and the probability depends its distance with the previous car
-
-	if deltaD < safeSpaceMin[speed] && prevCar.backlight == -1 {
-		probOfDecel = 0.9999
-	} else if deltaD < safeSpaceMin[speed] && prevCar.backlight != -1 {
-		probOfDecel = 0.9
-	} else if prevCar.backlight == -1 && deltaD > safeSpaceMin[speed] && deltaD < safeSpaceMax[speed] {
-		probOfDecel = p1
-	} else if prevCar.backlight >= 0 && deltaD > safeSpaceMin[speed] && deltaD < safeSpaceMax[speed] {
-		probOfDecel = p2
-	} else if prevCar.backlight == -1 {
-		probOfDecel = p3
-	} else {
-		probOfDecel = 0
-	}
-
-	thresToDecel = rand.Float64()
-
-	if probOfDecel < thresToDecel {
-		if speed < maxSpeed && deltaD > safeSpaceMax[speed] {
-			// acceleration because no car in front of it
+	if deltaD >= safeSpaceMax[speed] {
+		if CheckNearbyLaneChange(currentRoad, curLane, currentIndex, laneNum) == false {
 			newSpeed = speed + 1
-			newLight = 1
-		} else if prevCar.backlight == 1 && deltaD > safeSpaceMin[speed] {
-			// acceleration because the front car is accelerated
-			newSpeed = speed + 1
-			newLight = 1
+			newLight = 0
+		} else {
+			newSpeed = speed
+			newLight = 0
 		}
-	} else {
-		if deltaD <= safeSpaceMin[speed] {
-			// deceleration
-			newSpeed = speed - 1
-			newLight = -1
-		}
-		// else if deltaD == safeSpaceMin[speed] {
-		// 	// on hold case, speed not changed
-		// 	newSpeed = speed
-		// 	newLight = 0
-		// }
-	}
 
-	// // consider the traffic light before
-	// if deltaDLight >= 0 && deltaDLight < safetraffic[speed] && (prevLight.kind == 3 || prevLight.kind == 4) {
-	// 	newSpeed = speed - 1
-	// 	newLight = -1
-	// }
+	} else if deltaD < safeSpaceMax[speed] && deltaD >= safeSpaceMin[speed] {
+		prevCar = (*currentRoad)[curLane][currentIndex]
+		if prevCar.backlight == 0 {
+			newSpeed, newLight = Randomdeceleraion(p2, speed)
+		} else {
+			newSpeed, newLight = Randomdeceleraion(p1, speed)
+		}
+		if newSpeed == speed {
+			if CheckNearbyLaneChange(currentRoad, curLane, currentIndex, laneNum) {
+				newSpeed, newLight = Randomdeceleraion(p1, speed)
+			}
+		}
+	} else if deltaD < safeSpaceMin[speed] {
+		prevCar = (*currentRoad)[curLane][currentIndex]
+		newSpeed = min(speed-1, deltaD-speed-1)
+		newLight = 1
+	}
 
 	if newSpeed < 0 {
 		newSpeed = 0
@@ -404,7 +235,7 @@ func ChangeSpeedNSDV(currentRoad, newRoad *MultiRoad, carCnt *int, curLane, curr
 	if newIndex >= roadLength {
 		(*carCnt)++
 	} else if newIndex < roadLength && (*newRoad)[curLane][newIndex].kind != 0 {
-		// fmt.Println("NSDV crashes something.", newIndex)
+		fmt.Println("NSDV crashes something.", newIndex)
 	} else {
 		(*newRoad)[curLane][newIndex].speed = newSpeed
 		(*newRoad)[curLane][newIndex].kind = currentCar.kind
@@ -413,70 +244,87 @@ func ChangeSpeedNSDV(currentRoad, newRoad *MultiRoad, carCnt *int, curLane, curr
 	}
 }
 
-func ChangeLaneNSDV(currentRoad, newRoad *MultiRoad, curLane, currentIndex, prevCarIndex, prevLightIndex, laneNum int) {
-	var prevCar Car
-	var turningLight int
-	var probOfTurn float64
+func RandomTurn(p float64, turningLight int) int {
+	var newturningLight int
 
-	probOfTurn = -1
+	thresToTurn := rand.Float64()
+	if thresToTurn <= p {
+		newturningLight = turningLight
+	} else {
+		newturningLight = 0
+	}
+
+	return newturningLight
+
+}
+
+func ChangeLaneNSDV(currentRoad, newRoad *MultiRoad, curLane, currentIndex, prevCarIndex, laneNum int) {
+	var prevCar Car
+	var newturningLight int
+
+	currentCar := (*currentRoad)[curLane][currentIndex]
 
 	if prevCarIndex >= roadLength {
 		prevCar.kind = 0
-		turningLight = 0
+		newturningLight = 0
 	} else {
 		prevCar = (*currentRoad)[curLane][prevCarIndex]
-		turningLight = ChangeNSDVTurningLight(currentRoad, curLane, currentIndex, laneNum)
+		newturningLight = ChangeNSDVTurningLight(currentRoad, curLane, currentIndex, laneNum)
 	}
-	currentCar := (*currentRoad)[curLane][currentIndex]
+
 	speed := currentCar.speed
 	deltaD := prevCarIndex - currentIndex
-	aimLane := curLane + turningLight
+	aimLane := curLane + newturningLight
 
-	if turningLight != 0 {
-		if prevCar.backlight == -1 && safeSpaceMin[speed] <= deltaD &&
+	if newturningLight != 0 {
+		if prevCar.backlight == 1 && safeSpaceMin[speed] <= deltaD &&
 			safeSpaceMax[speed] > deltaD {
-			probOfTurn = cp1
-		} else if prevCar.backlight >= 0 && safeSpaceMin[speed] <= deltaD &&
+			newturningLight = RandomTurn(cp1, newturningLight)
+		} else if prevCar.backlight == 0 && safeSpaceMin[speed] <= deltaD &&
 			safeSpaceMax[speed] > deltaD {
-			probOfTurn = cp2
-		} else if speed == 0 {
-			probOfTurn = cp3
+			newturningLight = RandomTurn(cp2, newturningLight)
+		} else if deltaD < safeSpaceMin[speed] {
+			newturningLight = RandomTurn(cp3, newturningLight)
 		} else {
-			probOfTurn = 0
 		}
 	}
 
-	thresToTurn := rand.Float64()
+	if currentCar.turninglight == newturningLight {
+		currentCar.turninglightTime += 1
+	} else {
+		currentCar.turninglightTime = 0
+	}
 
-	if (*newRoad)[aimLane][currentIndex].kind != 0 {
-		//panic("NSDV crashes during changing lane.")
-		(*newRoad)[curLane][currentIndex].kind = currentCar.kind
-		(*newRoad)[curLane][currentIndex].speed = speed
-		(*newRoad)[curLane][currentIndex].turninglight = 0
-		(*newRoad)[curLane][currentIndex].backlight = currentCar.backlight
-	} else if thresToTurn <= probOfTurn {
-		(*newRoad)[aimLane][currentIndex].kind = currentCar.kind
-		(*newRoad)[aimLane][currentIndex].speed = speed
-		(*newRoad)[aimLane][currentIndex].turninglight = turningLight
-		(*newRoad)[aimLane][currentIndex].backlight = currentCar.backlight
-
-		if turningLight != 0 {
-			//fmt.Printf("NSDV changed lane from %v to %v at %v\n", curLane, aimLane, currentIndex)
+	if currentCar.turninglightTime == 1 {
+		if (*newRoad)[aimLane][currentIndex].kind != 0 {
+			fmt.Println("NSDV crashes during changing lane.")
+			(*newRoad)[curLane][currentIndex].kind = currentCar.kind
+			(*newRoad)[curLane][currentIndex].speed = speed
+			(*newRoad)[curLane][currentIndex].turninglight = 0
+			(*newRoad)[curLane][currentIndex].backlight = currentCar.backlight
+			(*newRoad)[curLane][currentIndex].turninglightTime = 0
+		} else {
+			fmt.Println("change!")
+			(*newRoad)[aimLane][currentIndex].kind = currentCar.kind
+			(*newRoad)[aimLane][currentIndex].speed = speed
+			(*newRoad)[aimLane][currentIndex].turninglight = newturningLight
+			(*newRoad)[aimLane][currentIndex].backlight = currentCar.backlight
+			(*newRoad)[curLane][currentIndex].turninglightTime = 0
 		}
 	} else {
 		(*newRoad)[curLane][currentIndex].kind = currentCar.kind
 		(*newRoad)[curLane][currentIndex].speed = speed
-		(*newRoad)[curLane][currentIndex].turninglight = 0
+		(*newRoad)[curLane][currentIndex].turninglight = newturningLight
 		(*newRoad)[curLane][currentIndex].backlight = currentCar.backlight
-
+		(*newRoad)[curLane][currentIndex].turninglightTime = currentCar.turninglightTime
 	}
+
 }
 
 func ChangeLane(currentRoad *MultiRoad, laneNum int) MultiRoad {
 	var newRoad MultiRoad
 	var kind int
 	var prevCarIndex int
-	var prevLightIndex int
 
 	// make a new empty multi-lane road
 	newRoad = make(MultiRoad, len(*currentRoad))
@@ -487,13 +335,20 @@ func ChangeLane(currentRoad *MultiRoad, laneNum int) MultiRoad {
 	for curLane := 0; curLane < laneNum; curLane++ {
 		for j := roadLength - 1; j >= 0; j-- {
 			prevCarIndex = GetPrevCar((*currentRoad)[curLane], j)
-			prevLightIndex = GetPrevLight((*currentRoad)[curLane], j)
 			kind = (*currentRoad)[curLane][j].kind
 			if kind == 1 {
-				ChangeLaneNSDV(currentRoad, &newRoad, curLane, j, prevCarIndex, prevLightIndex, laneNum)
-			} else if kind == 2 {
-				ChangeLaneSDV(currentRoad, &newRoad, curLane, j, prevCarIndex, prevLightIndex, laneNum)
-			} else if kind > 2 {
+				ChangeLaneNSDV(currentRoad, &newRoad, curLane, j, prevCarIndex, laneNum)
+			} else if kind == 2 && CheckTrain((*currentRoad)[curLane], j) > 1 {
+				if CheckTrain((*currentRoad)[curLane], j) <= trainLength {
+					ChangeLaneSDVTrain(currentRoad, &newRoad, curLane, j, laneNum)
+				} else if GetTrainTail((*currentRoad)[curLane], j) != j {
+					ChangeLaneSDVTrain(currentRoad, &newRoad, curLane, j, laneNum)
+				} else {
+					ChangeLaneSDV(currentRoad, &newRoad, curLane, j, prevCarIndex, laneNum)
+				}
+			} else if kind == 2 && CheckTrain((*currentRoad)[curLane], j) == 1 {
+				ChangeLaneSDV(currentRoad, &newRoad, curLane, j, prevCarIndex, laneNum)
+			} else {
 				newRoad[curLane][j] = (*currentRoad)[curLane][j]
 			}
 		}
@@ -530,7 +385,38 @@ func ChangeNSDVTurningLight(currentRoad *MultiRoad, curLane, curCarIndex, laneNu
 	return DecisionLaneChange(leftLane, rightLane, lanePreference)
 }
 
-func ChangeLaneSDV(currentRoad, newRoad *MultiRoad, curLane, currentIndex, prevCarIndex, prevLightIndex, laneNum int) {
+func ChangeLaneSDVTrain(currentRoad, newRoad *MultiRoad, curLane, currentIndex, laneNum int) {
+	var turningLight int
+	var trainhead int
+
+	trainhead = GetTrainHead((*currentRoad)[curLane], currentIndex)
+
+	turningLight = ChangeSDVTurningLight(currentRoad, curLane, trainhead, laneNum)
+
+	currentCar := (*currentRoad)[curLane][currentIndex]
+	speed := currentCar.speed
+
+	aimLane := curLane + turningLight
+
+	if (*newRoad)[aimLane][currentIndex].kind != 0 {
+		fmt.Printf("SDV crashes during changing lane.")
+		(*newRoad)[curLane][currentIndex].kind = currentCar.kind
+		(*newRoad)[curLane][currentIndex].speed = speed
+		(*newRoad)[curLane][currentIndex].turninglight = 0
+		(*newRoad)[curLane][currentIndex].backlight = currentCar.backlight
+	} else {
+		(*newRoad)[aimLane][currentIndex].kind = currentCar.kind
+		(*newRoad)[aimLane][currentIndex].speed = speed
+		(*newRoad)[aimLane][currentIndex].turninglight = turningLight
+		(*newRoad)[aimLane][currentIndex].backlight = currentCar.backlight
+
+		if turningLight != 0 {
+			fmt.Printf("SDV changed lane from %v to %v at %v\n", curLane, aimLane, currentIndex)
+		}
+	}
+}
+
+func ChangeLaneSDV(currentRoad, newRoad *MultiRoad, curLane, currentIndex, prevCarIndex, laneNum int) {
 	var prevCar Car
 	var turningLight int
 
@@ -547,7 +433,7 @@ func ChangeLaneSDV(currentRoad, newRoad *MultiRoad, curLane, currentIndex, prevC
 	aimLane := curLane + turningLight
 
 	if (*newRoad)[aimLane][currentIndex].kind != 0 {
-		//panic("SDV crashes during changing lane.")
+		fmt.Printf("SDV crashes during changing lane.")
 		(*newRoad)[curLane][currentIndex].kind = currentCar.kind
 		(*newRoad)[curLane][currentIndex].speed = speed
 		(*newRoad)[curLane][currentIndex].turninglight = 0
@@ -559,7 +445,7 @@ func ChangeLaneSDV(currentRoad, newRoad *MultiRoad, curLane, currentIndex, prevC
 		(*newRoad)[aimLane][currentIndex].backlight = currentCar.backlight
 
 		if turningLight != 0 {
-			//fmt.Printf("SDV changed lane from %v to %v at %v\n", curLane, aimLane, currentIndex)
+			fmt.Printf("SDV changed lane from %v to %v at %v\n", curLane, aimLane, currentIndex)
 		}
 	}
 }
@@ -585,109 +471,135 @@ func DecisionLaneChange(leftLane, rightLane bool, lanePreference float64) int {
 
 func LCSforNSDV(road *MultiRoad, curLane, aimLane, curCarIndex int) bool {
 	var res bool
-	res = false
+	res = true
 	if curCarIndex == 0 {
 		res = false
 	}
 	speed := (*road)[curLane][curCarIndex].speed
 
 	curAheadCarIndex := GetPrevCar((*road)[curLane], curCarIndex)
-	curAheadLightIndex := GetPrevLight((*road)[curLane], curCarIndex)
-	if curAheadLightIndex <= curAheadCarIndex {
-		curAheadCarIndex = curAheadLightIndex
-	}
+	curNextCarIndex := GetNext((*road)[curLane], curCarIndex)
 	aimAheadCarIndex := GetPrevCar((*road)[aimLane], curCarIndex-1)
-	aimAheadLightIndex := GetPrevLight((*road)[aimLane], curCarIndex)
-	if aimAheadLightIndex <= aimAheadCarIndex {
-		aimAheadCarIndex = aimAheadLightIndex
-	}
 	aimNextCarIndex := GetNext((*road)[aimLane], curCarIndex+1)
-	if aimNextCarIndex < 0 {
-		aimNextCarIndex = 0
-	}
 	curAheadDelta_d := curAheadCarIndex - curCarIndex
+	curNextDelta_d := curCarIndex - curNextCarIndex
 	aimAheadDelta_d := aimAheadCarIndex - curCarIndex
 	aimBackDelta_d := curCarIndex - aimNextCarIndex
 
-	if curAheadDelta_d >= safeSpaceMin[speed] && aimAheadDelta_d >= safeSpaceMin[speed] &&
+	if aimAheadDelta_d >= safeSpaceMin[speed] && aimNextCarIndex < 0 {
+		res = true
+	} else if aimAheadDelta_d >= safeSpaceMin[speed] &&
 		aimBackDelta_d >= safeSpaceMin[(*road)[aimLane][aimNextCarIndex].speed] {
 		res = true
 	} else {
 		res = false
 	}
+
+	if curAheadCarIndex <= roadLength {
+		if curAheadDelta_d <= safeSpaceMin[speed] && (*road)[curLane][curAheadCarIndex].turninglight == aimLane-curLane {
+			res = false
+		}
+	}
+
+	if curNextCarIndex >= 0 {
+		if curNextDelta_d <= safeSpaceMin[(*road)[curLane][curNextCarIndex].speed] && (*road)[curLane][curNextCarIndex].turninglight == aimLane-curLane {
+			res = false
+		}
+	}
+
 	return res
 }
 
 func LCSforSDV(road *MultiRoad, curLane, aimLane, curCarIndex int) bool {
+	var curLanePrev Car
+	var curLaneNext Car
+
 	t1 := false
 	t2 := false
 	t3 := false
 	speed := (*road)[curLane][curCarIndex].speed
 	curAheadCarIndex := GetPrevCar((*road)[curLane], curCarIndex)
-	curAheadLightIndex := GetPrevLight((*road)[curLane], curCarIndex)
-	if curAheadLightIndex <= curAheadCarIndex {
-		curAheadCarIndex = curAheadLightIndex
-	}
+	curNextCarIndex := GetNext((*road)[curLane], curCarIndex)
 	aimAheadCarIndex := GetPrevCar((*road)[aimLane], curCarIndex-1)
-	aimAheadLightIndex := GetPrevLight((*road)[aimLane], curCarIndex)
-	if aimAheadLightIndex <= aimAheadCarIndex {
-		aimAheadCarIndex = aimAheadLightIndex
-	}
 	aimNextCarIndex := GetNext((*road)[aimLane], curCarIndex+1)
-	if aimNextCarIndex < 0 {
-		aimNextCarIndex = 0
-	}
 	curAheadDelta_d := curAheadCarIndex - curCarIndex
+	curNextDelta_d := curCarIndex - curNextCarIndex
 	aimAheadDelta_d := aimAheadCarIndex - curCarIndex
 	aimBackDelta_d := curCarIndex - aimNextCarIndex
 
-	if curAheadCarIndex == 2*roadLength {
+	// t1 curlane ahead car no turning light
+	if curAheadCarIndex == 2*roadLength && curNextCarIndex == -100 {
 		t1 = true
 	} else if curAheadCarIndex != 2*roadLength {
-		// if curAheadDelta_d >= safeSpaceMin[speed] {
-		// 	t1 = true
-		// } else {
-		// 	t1 = false
-		// }
-
-		if curAheadDelta_d >= (safeSpaceMin[speed] - safeSpaceMin[(*road)[curLane][curAheadCarIndex].speed] + 1 + 2*(*road)[curLane][curAheadCarIndex].speed) {
-			t1 = true
+		curLanePrev = (*road)[curLane][curAheadCarIndex]
+		if curLanePrev.kind == 1 || curLanePrev.kind == 3 {
+			if curAheadDelta_d <= safeSpaceMin[speed] && curLanePrev.turninglight == aimLane-curLane {
+				t1 = false
+			} else {
+				t1 = true
+			}
 		} else {
-			t1 = false
+			if curAheadDelta_d <= GetSDVmindis(curCarIndex, curAheadCarIndex, (*road)[curLane]) && curLanePrev.turninglight == aimLane-curLane {
+				t1 = false
+			} else {
+				t1 = true
+			}
 		}
-
+	} else {
+		curLaneNext = (*road)[curLane][curNextCarIndex]
+		if curLanePrev.kind == 1 || curLanePrev.kind == 3 {
+			if curNextDelta_d <= safeSpaceMin[speed] && curLaneNext.turninglight == aimLane-curLane {
+				t1 = false
+			} else {
+				t1 = true
+			}
+		} else {
+			if curNextDelta_d <= GetSDVmindis(curNextCarIndex, curCarIndex, (*road)[curLane]) && curLaneNext.turninglight == aimLane-curLane {
+				t1 = false
+			} else {
+				t1 = true
+			}
+		}
 	}
 
 	if aimAheadCarIndex == 2*roadLength {
 		t2 = true
 	} else if aimAheadCarIndex != 2*roadLength {
-		if aimAheadDelta_d >= safeSpaceSDVMin[speed] {
-			t2 = true
-		} else {
-			t2 = false
-		}
+		aimAheadCar := (*road)[aimLane][aimAheadCarIndex]
+		if aimAheadCar.kind == 1 || aimAheadCar.kind == 3 {
+			if aimAheadDelta_d >= safeSpaceSDVMin[speed] {
+				t2 = true
+			} else {
+				t2 = false
+			}
 
-		if aimAheadDelta_d >= (safeSpaceMin[speed] - safeSpaceMin[(*road)[aimLane][aimAheadCarIndex].speed] + 1 + 2*(*road)[aimLane][aimAheadCarIndex].speed + 1) {
-			t2 = true
 		} else {
-			t2 = false
+			//aimAheadDelta_d >= (safeSpaceMin[speed] - safeSpaceMin[(*road)[aimLane][aimAheadCarIndex].speed] + 1 + 2*(*road)[aimLane][aimAheadCarIndex].speed + 1)
+			if aimAheadDelta_d >= GetSDVmindis(curCarIndex, aimAheadCarIndex, (*road)[aimLane]) {
+				t2 = true
+			} else {
+				t2 = false
+			}
 		}
 
 	}
 
-	if aimNextCarIndex == -1 {
+	if aimNextCarIndex < 0 {
 		t3 = true
-	} else if aimNextCarIndex != -1 {
-		if aimBackDelta_d >= safeSpaceMin[(*road)[aimLane][aimNextCarIndex].speed] {
-			t3 = true
+	} else if aimNextCarIndex >= 0 {
+		aimNextCar := (*road)[aimLane][aimNextCarIndex]
+		if aimNextCar.kind == 1 || aimNextCar.kind == 3 {
+			if aimBackDelta_d >= safeSpaceMin[aimNextCar.speed] {
+				t3 = true
+			} else {
+				t3 = false
+			}
 		} else {
-			t3 = false
-		}
-
-		if aimBackDelta_d >= (safeSpaceMin[(*road)[aimLane][aimNextCarIndex].speed] - safeSpaceMin[speed] + 2*speed + 1) {
-			t3 = true
-		} else {
-			t3 = false
+			if aimBackDelta_d > GetSDVmindis(aimNextCarIndex, curCarIndex, (*road)[aimLane]) || (speed >= aimNextCar.speed && CheckTrain((*road)[aimLane], aimNextCarIndex) < trainLength) {
+				t3 = true
+			} else {
+				t3 = false
+			}
 		}
 
 	}
@@ -699,6 +611,7 @@ func LCSforSDV(road *MultiRoad, curLane, aimLane, curCarIndex int) bool {
 	}
 
 }
+
 func ChangeSDVTurningLight(currentRoad *MultiRoad, curLane, curCarIndex, laneNum int) int {
 	var aimLane int
 	var lcm, lcs, leftLane, rightLane bool
@@ -713,7 +626,6 @@ func ChangeSDVTurningLight(currentRoad *MultiRoad, curLane, curCarIndex, laneNum
 		if lcm && lcs {
 			leftLane = true
 		}
-		fmt.Println(lcm, lcs)
 	}
 
 	if ValidLane(curLane+1, laneNum) {
@@ -723,7 +635,6 @@ func ChangeSDVTurningLight(currentRoad *MultiRoad, curLane, curCarIndex, laneNum
 		if lcm && lcs {
 			rightLane = true
 		}
-		fmt.Println(lcm, lcs)
 	}
 
 	return DecisionLaneChange(leftLane, rightLane, lanePreference)
@@ -732,9 +643,6 @@ func ChangeSDVTurningLight(currentRoad *MultiRoad, curLane, curCarIndex, laneNum
 func LCMforNSDV(road *MultiRoad, curLane, aimLane, curCarIndex, laneNum int) bool {
 	var curAheadDelta_d int
 	var aimAheadDelta_d int
-	var curAheadSpeed int
-	var aimAheadSpeed int
-
 	if aimLane >= laneNum {
 		return false
 	}
@@ -742,93 +650,94 @@ func LCMforNSDV(road *MultiRoad, curLane, aimLane, curCarIndex, laneNum int) boo
 	res = false
 	speed := (*road)[curLane][curCarIndex].speed
 	curAheadCarIndex := GetPrevCar((*road)[curLane], curCarIndex)
-	curAheadLightIndex := GetPrevLight((*road)[curLane], curCarIndex)
-	if curAheadLightIndex <= curAheadCarIndex {
-		curAheadCarIndex = curAheadLightIndex
-	}
-
 	aimAheadCarIndex := GetPrevCar((*road)[aimLane], curCarIndex)
-	aimAheadLightIndex := GetPrevLight((*road)[aimLane], curCarIndex)
-	if aimAheadLightIndex <= aimAheadCarIndex {
-		aimAheadCarIndex = aimAheadLightIndex
-	}
 
 	// if there is no car ahead in the curLane
 	if curAheadCarIndex > roadLength {
 		curAheadDelta_d = 0
-		curAheadSpeed = 0
 	} else {
 		curAheadDelta_d = curAheadCarIndex - curCarIndex
-		curAheadSpeed = (*road)[curLane][curAheadCarIndex].speed
 	}
 
 	// if there is no car ahead in the aimlane
 	if aimAheadCarIndex > roadLength {
 		aimAheadDelta_d = roadLength
-		aimAheadSpeed = maxSpeed + 1
 	} else {
 		aimAheadDelta_d = aimAheadCarIndex - curCarIndex
-		aimAheadSpeed = (*road)[aimLane][aimAheadCarIndex].speed
 	}
 
-	if curAheadDelta_d < safeSpaceMax[speed] || (aimAheadSpeed >= speed && curAheadSpeed < speed) {
-		if aimAheadDelta_d > safeSpaceMin[speed] {
+	if curAheadDelta_d < safeSpaceMax[speed] || CheckNearbyLaneChange(road, curLane, curCarIndex, laneNum) {
+		if aimAheadDelta_d > safeSpaceMax[speed] {
 			res = true
 		} else {
 			res = false
 		}
+	} else {
+		if aimAheadDelta_d > safeSpaceMax[speed] {
+			p := rand.Float64()
+			if p > 0.5 {
+				res = true
+			}
+		} else {
+			res = false
+		}
+
 	}
 
 	return res
 }
 
 func LCMforSDV(road *MultiRoad, currentRoadIndex, aimRoadIndex int, currentCarIndex int) bool {
-	var prevspeed int
-	var aimprevspeed int
-	var prevkind int
-	var aimkind int
+	var prevCar Car
+	var aimprevCar Car
+	var res bool
 
+	res = true
 	speed := (*road)[currentRoadIndex][currentCarIndex].speed
 
 	prevCarIndex := GetPrevCar((*road)[currentRoadIndex], currentCarIndex)
-	prevLightIndex := GetPrevLight((*road)[currentRoadIndex], currentCarIndex)
-	if prevLightIndex <= prevCarIndex {
-		prevCarIndex = prevLightIndex
-	}
 	delta := prevCarIndex - currentCarIndex
 	if prevCarIndex > roadLength {
-		prevkind = 0
+		prevCar.kind = 0
 	} else {
-		prevspeed = (*road)[currentRoadIndex][prevCarIndex].speed
-		prevkind = (*road)[currentRoadIndex][prevCarIndex].kind
+		prevCar = (*road)[currentRoadIndex][prevCarIndex]
 	}
 
 	prevAimCarIndex := GetPrevCar((*road)[aimRoadIndex], currentCarIndex)
-	prevAimLightIndex := GetPrevLight((*road)[aimRoadIndex], currentCarIndex)
-	if prevAimLightIndex <= prevAimCarIndex {
-		prevAimCarIndex = prevAimLightIndex
-	}
 	deltaAimCar := prevAimCarIndex - currentCarIndex
 	if prevAimCarIndex > roadLength {
-		aimkind = 0
+		aimprevCar.kind = 0
 	} else {
-		aimprevspeed = (*road)[aimRoadIndex][prevAimCarIndex].speed
-		aimkind = (*road)[aimRoadIndex][prevAimCarIndex].kind
+		aimprevCar = (*road)[aimRoadIndex][prevAimCarIndex]
 	}
 
-	if prevkind != 0 && aimkind != 0 {
-		if (delta < safeSpaceMax[speed] || aimprevspeed >= speed) && (prevspeed < speed) {
-			if deltaAimCar >= safeSpaceMin[speed] {
-				return true
+	if prevCar.kind == 0 {
+		res = false
+	} else if prevCar.kind == 1 || prevCar.kind == 3 {
+		if delta <= safeSpaceMax[speed] {
+			if deltaAimCar > safeSpaceMax[speed] {
+				res = true
 			} else {
-				return false
+				res = false
 			}
 		} else {
-			return false
+			res = false
 		}
-	} else if prevkind == 0 {
-		return false
+
 	} else {
-		return true
+		if delta <= safeSpaceMax[speed] || (prevCar.speed < speed && CheckTrain((*road)[currentRoadIndex], prevCarIndex) >= trainLength) {
+			if aimprevCar.kind == 0 {
+				res = true
+			} else if deltaAimCar > safeSpaceMax[speed] || (deltaAimCar > GetSDVmindis(currentCarIndex, prevAimCarIndex, (*road)[aimRoadIndex]) && aimprevCar.speed > speed && CheckTrain((*road)[aimRoadIndex], prevAimCarIndex) < trainLength) {
+				res = true
+			} else {
+				res = false
+			}
+		} else {
+			res = false
+		}
+
 	}
+	return res
+
 }
