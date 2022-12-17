@@ -5,6 +5,7 @@ import (
 	"image"
 )
 
+// generate imagelist
 func BoardsToImages(roads []MultiRoad, cellWidth int) []image.Image {
 	imageList := make([]image.Image, len(roads))
 	for i := range roads {
@@ -27,17 +28,22 @@ func (r MultiRoad) BoardToImage(scalingFactor int) image.Image {
 	for i := 0; i < height; i++ {
 		for j := 0; j < width; j++ {
 			if r[i][j].kind == 0 {
+				// emptyroad repesent by blank grid
 				c.SetFillColor(MakeColor(255, 255, 255))
 			} else if r[i][j].kind == 1 {
 				if r[i][j].turninglight == -1 || r[i][j].turninglight == 1 {
+					// green represent cars with turning light on
 					c.SetFillColor(MakeColor(0, 255, 0))
 				} else {
+					// pink represent NSDVs
 					c.SetFillColor(MakeColor(244, 114, 208))
 				}
 			} else if r[i][j].kind == 2 {
 				if r[i][j].turninglight == -1 || r[i][j].turninglight == 1 {
+					// green represent cars with turning light on
 					c.SetFillColor(MakeColor(0, 255, 0))
 				} else {
+					// blue represent NSDVs
 					c.SetFillColor(MakeColor(0, 0, 255))
 				}
 			} else if r[i][j].kind == 3 {
@@ -165,6 +171,7 @@ func DrawBoardMulti(t []MultiRoad, numGens, laneNum int, filename string) {
 func DrawPoint(a Canvas, r, c int) {
 	a.ClearRect(r, c, r+1, c+1)
 }
+
 func drawSquare(a Canvas, r, c int) {
 	x1, y1 := float64(r), float64(c)
 	x2, y2 := float64(r+1), float64(c+1)

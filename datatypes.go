@@ -2,7 +2,7 @@ package main
 
 import "C"
 
-const roadLength = 200
+const roadLength = 300
 const maxSpeed = 10
 
 const p1 = 0.9
@@ -11,7 +11,7 @@ const p3 = 0.2
 const cp1 = 0.7
 const cp2 = 0.4
 const cp3 = 0.9
-const trainLength = 5
+const trainLength = 10
 
 type Car struct {
 	speed            int
@@ -19,6 +19,7 @@ type Car struct {
 	backlight        int
 	turninglight     int
 	turninglightTime int
+	passingTime      int
 }
 
 // kind = 0  <-------> empty road

@@ -1,15 +1,14 @@
 package main
 
 import (
-	"C"
+	"fmt"
 	"math/rand"
 )
-import "fmt"
 
 // SingleLaneSimulation update the single Road
 // Input: a Road object
 // Output: a Road Object
-func SingleLaneSimulation(currentRoad Road, kindPossiblity float64, gen int) Road {
+func SingleLaneSimulation(currentRoad Road, kindPossiblity float64, gen int) (Road, int) {
 	var prevCarIndex int
 
 	// make a new road
@@ -48,8 +47,7 @@ func SingleLaneSimulation(currentRoad Road, kindPossiblity float64, gen int) Roa
 		}
 	}
 
-	//fmt.Println(carCnt)
-	return newRoad
+	return newRoad, carCnt
 }
 
 func Randomdeceleraion(p float64, speed int) (int, int) {
@@ -199,6 +197,7 @@ func SingleLaneSDVupdate(currentRoad, newRoad *Road, carCnt *int, currentIndex, 
 	} else {
 		if prevCarIndex < roadLength {
 			(*currentRoad)[currentIndex].speed = newSpeed
+			(*currentRoad)[currentIndex].backlight = newLight
 		}
 		(*newRoad)[newIndex].speed = newSpeed
 		(*newRoad)[newIndex].backlight = newLight

@@ -1,0 +1,19 @@
+lane,Vehicle Type,ratio,Car flow
+1,SDV,0.3,202
+1,SDV,0.4,274
+1,SDV,0.5,354
+1,SDV,0.6,427
+1,SDV,0.7,519
+1,SDV,0.8,606
+1,NSDV,0.3,472
+1,NSDV,0.4,412
+1,NSDV,0.5,354
+1,NSDV,0.6,285
+1,NSDV,0.7,222
+1,NSDV,0.8,152
+1,Total,0.3,674
+1,Total,0.4,686
+1,Total,0.5,708
+1,Total,0.6,712
+1,Total,0.7,741
+1,Total,0.8,758

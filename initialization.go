@@ -1,7 +1,7 @@
 package main
 
 import (
-	"fmt"
+	"C"
 	"math"
 	"math/rand"
 	"time"
@@ -27,7 +27,6 @@ func initialSingleLane(incidentPos []int, NSDVdensity float64) Road {
 	// generate NSDV cars randomly
 	NSDVnumber = int(math.Floor(NSDVdensity * roadLength))
 	posList = RandomPosGenerate(NSDVnumber, roadLength)
-	fmt.Println(posList)
 	for i := range posList {
 		k := posList[i]
 		initialRoad[k].kind = 1
@@ -38,6 +37,9 @@ func initialSingleLane(incidentPos []int, NSDVdensity float64) Road {
 	return initialRoad
 }
 
+// Randomly generate n positions on the road
+//
+//export RandomPosGenerate
 func RandomPosGenerate(n, totalLength int) []int {
 	var p int
 	var posList []int
@@ -52,6 +54,9 @@ func RandomPosGenerate(n, totalLength int) []int {
 	return posList
 }
 
+// CheckRepeat checks if there's repeat in n randomly generated numbers
+//
+//export CheckRepeat
 func CheckRepeat(k int, list []int) bool {
 	n := len(list)
 	for i := 0; i < n; i++ {

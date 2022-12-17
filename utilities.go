@@ -1,11 +1,7 @@
 package main
 
 import (
-	"C"
 	"math/rand"
-)
-import (
-	"time"
 )
 
 func GetPrevCar(currentRoad Road, index int) int {
@@ -66,7 +62,7 @@ func ValidLane(lane, laneNum int) bool {
 // Output: a boolean object
 func Produce(currentRoad *Road, kindPossiblity float64) bool {
 	// Determine the kind of next car based on kind possibility
-	rand.Seed(time.Now().UnixNano())
+	//rand.Seed(time.Now().UnixNano())
 	p := rand.Float64()
 	var kind int
 	var initSpeedBound int
@@ -110,10 +106,11 @@ func Produce(currentRoad *Road, kindPossiblity float64) bool {
 		// no car produced
 		return false
 	} else {
-		rand.Seed(time.Now().UnixNano())
+		//rand.Seed(time.Now().UnixNano())
 		(*currentRoad)[0].speed = rand.Intn(initSpeedBound)
 		(*currentRoad)[0].kind = kind
 		(*currentRoad)[0].backlight = 0
+		(*currentRoad)[0].passingTime = 0
 	}
 	return true
 }
