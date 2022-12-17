@@ -1,6 +1,7 @@
 
 <div align='center' ><font size='6'>Optimization of traffic capacity based on Cellular Automata</font></div>
 
+- [Instructions](#Instructions)
 - [Contributor](#Contributor)
 - [Background](#Background)
 - [Method](#Method)
@@ -13,6 +14,26 @@
   - [Website](#Webset)
 - [Expectation](#Expectation)
 - [Video](#Video)
+
+
+
+* # Instructions
+
+To run the code, enter`` .\MultilaneNaschModel.exe <sdv_percentage> <simulation_generation> <laneNum> <incident_postion>`` 
+
+Input:
+
+​	sdv_percentage: The ratio of SDV/NSDV generated at the beginning of the road
+
+​	simulation_generation: The number of generations
+
+​	laneNum: The number of lanes in the road
+
+​	incident_position: the position in the road where car crash accidents happen，should be less than 1000.
+
+output:
+
+​	output.out.gif: the simulation GIF of the road
 
 * # Contributor
   
