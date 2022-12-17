@@ -100,11 +100,11 @@ func TestCheckChain(t *testing.T) {
 
 	road = append(road, a, b, c, d, e)
 
-	if CheckTrain(road, 1) == true {
+	if CheckTrain(road, 1) >= 3 {
 		fmt.Println("pass the test for second car!")
-	} else if CheckTrain(road, 3) == true {
+	} else if CheckTrain(road, 3) >= 3 {
 		fmt.Println("pass the test for third car!")
-	} else if CheckTrain(road, 4) == true {
+	} else if CheckTrain(road, 4) >= 3 {
 		fmt.Println("pass the test for fourth car!")
 	} else {
 		t.Error("Can't pass the test!")
@@ -143,4 +143,69 @@ func TestGetTrainHead(t *testing.T) {
 		t.Error("Can't pass the test!")
 	}
 
+}
+
+func TestGetPrevCar(t *testing.T) {
+	//change roadLength = 8
+	var road Road
+
+	var a Car
+	a.kind = 0
+
+	var b Car
+	b.kind = 2
+	b.speed = 1
+
+	var c Car
+	c.kind = 0
+
+	var d Car
+	d.kind = 2
+	d.speed = 3
+
+	var e Car
+	e.kind = 2
+	e.speed = 4
+
+	var emp Car
+	emp.kind = 0
+
+	road = append(road, a, d, emp, emp, emp, emp, emp, e)
+	if GetPrevCar(road, 1) == 7 {
+		fmt.Println("pass the test for GetPrevCar!")
+	} else if CheckTrain(road, 3) >= 3 {
+		fmt.Println("Do not pass the test for GetPrevCar!")
+	}
+}
+
+func TestGetPrevLight(t *testing.T) {
+	//change roadLength = 8
+	var road Road
+
+	var a Car
+	a.kind = 0
+
+	var b Car
+	b.kind = 2
+	b.speed = 1
+
+	var c Car
+	c.kind = 0
+
+	var d Car
+	d.kind = 2
+	d.speed = 3
+
+	var e Car
+	e.kind = 4
+
+	var emp Car
+	emp.kind = 0
+
+	road = append(road, a, d, emp, emp, emp, emp, emp, e)
+	if GetPrevCar(road, 1) == 7 {
+		fmt.Println("pass the test for GetPrevLight!")
+	} else if CheckTrain(road, 3) >= 3 {
+		fmt.Println("Do not pass the test for GetPrevLight!")
+	}
 }

@@ -6,17 +6,7 @@ import (
 
 func GetPrevCar(currentRoad Road, index int) int {
 	for c := index + 1; c < roadLength; c++ {
-		if currentRoad[c].kind == 1 || currentRoad[c].kind == 2 {
-			return c
-		}
-	}
-
-	return 2 * roadLength
-}
-
-func GetPrevLight(currentRoad Road, index int) int {
-	for c := index + 1; c < roadLength; c++ {
-		if currentRoad[c].kind > 2 {
+		if currentRoad[c].kind != 0 {
 			return c
 		}
 	}
@@ -31,16 +21,16 @@ func GetNext(currentRoad Road, index int) int {
 		}
 	}
 
-	return -1
+	return -100
 }
 
 func GetSDVmindis(k, m int, currentroad Road) int {
 	var BrakingDistance int
 	vm := currentroad[m].speed
-	va := currentroad[k].speed
-	maxv := max(vm-2, 0)
-	BrakingDistance = safeSpaceSDVMin[maxv]
-	maxva := max(safeSpaceSDVMin[va]-BrakingDistance+1, 1)
+	vk := currentroad[k].speed
+	maxv := max(vk-vm, 0)
+	BrakingDistance = maxv
+	maxva := max(safeSpaceSDVMin[maxv]-BrakingDistance+1, 2)
 
 	return maxva
 
@@ -72,13 +62,14 @@ func ValidLane(lane, laneNum int) bool {
 // Output: a boolean object
 func Produce(currentRoad *Road, kindPossiblity float64) bool {
 	// Determine the kind of next car based on kind possibility
+	//rand.Seed(time.Now().UnixNano())
 	p := rand.Float64()
 	var kind int
 	var initSpeedBound int
 	if p < kindPossiblity {
-		kind = 1
-	} else {
 		kind = 2
+	} else {
+		kind = 1
 	}
 
 	// determin the speed range that the car can obtain
@@ -88,29 +79,25 @@ func Produce(currentRoad *Road, kindPossiblity float64) bool {
 
 		// if no car before
 		if prevCar > roadLength {
-			initSpeedBound = maxSpeed
+			initSpeedBound = maxSpeed + 1
 		} else if (kind == 1) || (kind == 2 && (*currentRoad)[prevCar].kind == 1) {
 			// if the new car is a NSDV or the new car is SDV and prevCar is NSDV
-			for i := 0; i < maxSpeed; i++ {
-				if prevCar < safeSpaceMin[i] {
-					initSpeedBound = i - 1
+			for i := maxSpeed - 1; i >= 0; i-- {
+				if prevCar > safeSpaceMin[i] {
+					initSpeedBound = i
 					break
 				}
 			}
 		} else if kind == 2 && (*currentRoad)[prevCar].kind == 2 {
 			// if the new car is a SDV and prevCar is a SDV
 
-			for i := 0; i < maxSpeed; i++ {
-				minSpace := safeSpaceMin[i] - safeSpaceMin[(*currentRoad)[prevCar].speed] + 2*(*currentRoad)[prevCar].speed + 1
-				if prevCar < minSpace {
-					initSpeedBound = i - 1
+			for i := maxSpeed - 1; i >= 0; i-- {
+				minSpace := max(safeSpaceMin[i]-safeSpaceMin[(*currentRoad)[prevCar].speed]+2*(*currentRoad)[prevCar].speed+1, 1)
+				if prevCar > minSpace {
+					initSpeedBound = i
 					break
 				}
-				// initSpeedBound = (*currentRoad)[prev].speed
-				// minSpace := GetSDVmindis(0, prevCar, *currentRoad)
-				// delta_d := prevCar - 0
-				// if delta_d < minSpace {
-				// 	return false
+
 			}
 		}
 	}
@@ -119,10 +106,11 @@ func Produce(currentRoad *Road, kindPossiblity float64) bool {
 		// no car produced
 		return false
 	} else {
-		(*currentRoad)[0].speed = 1 + rand.Intn(initSpeedBound)
+		//rand.Seed(time.Now().UnixNano())
+		(*currentRoad)[0].speed = rand.Intn(initSpeedBound)
 		(*currentRoad)[0].kind = kind
 		(*currentRoad)[0].backlight = 0
-		(*currentRoad)[0].accel = 0
+		(*currentRoad)[0].passingTime = 0
 	}
 	return true
 }
@@ -167,15 +155,34 @@ func GetTrainHead(road Road, carIndex int) int {
 
 }
 
+func GetTrainTail(road Road, carIndex int) int {
+	trainTailIndex := carIndex
+	index := CheckNextTrain(road, carIndex)
+
+	if index == 0 {
+		return trainTailIndex
+	} else {
+		for i := carIndex - 1; i >= 0; i-- {
+			if road[i].kind == 0 {
+				trainTailIndex--
+
+			} else if road[i].kind == 2 {
+				index -= 1
+				if index == 0 {
+					return trainTailIndex
+				}
+			}
+		}
+		return trainTailIndex
+	}
+
+}
+
 // Only checktrain if the car is an SDV.
-func CheckTrain(road Road, carIndex int) bool {
+func CheckTrain(road Road, carIndex int) int {
 	var sum int
 	sum = 1 + CheckPreviousTrain(road, carIndex) + CheckNextTrain(road, carIndex)
-	if sum >= 3 {
-		return true
-	} else {
-		return false
-	}
+	return sum
 }
 
 func CheckPreviousTrain(road Road, carIndex int) int {
