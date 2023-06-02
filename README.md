@@ -5,7 +5,7 @@
 
 To run the code, enter
 
-`` .\MultilaneNaschModel.exe <sdv_percentage> <simulation_generation> <lane_num> <incident_postion>`` 
+`` ./MultilaneNaschModel.exe <sdv_percentage> <simulation_generation> <lane_num> <incident_postion>`` 
 
 Input:
 
